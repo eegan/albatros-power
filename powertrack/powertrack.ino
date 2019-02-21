@@ -5,13 +5,15 @@ unsigned long lastLoopBegin;
 void setup()
 {
   lastLoopBegin = millis();
-  serviceSerialInit();
+  serviceDatastreamInit();
+  debugInit();
 }
 
 void loop()
 {
   // Pace the main loop
   // TODO: implement sleep
+  #if 0
   long sinceLastLoopBegin;
   unsigned long now;
   do {
@@ -21,8 +23,8 @@ void loop()
   }
   while (sinceLastLoopBegin < loopInterval);
   lastLoopBegin = now;
-
-  serviceSerial();
+  #endif
+  serviceDatastream();
 }
 
 
@@ -46,6 +48,16 @@ void assertfail(char *file, long line)
 ////////////////////////////////////////////////////////////////////////////////////
 
 
+////////////////////////////////////////////////////////////////////////////////////
+// Debug support
+////////////////////////////////////////////////////////////////////////////////////
+HardwareSerial &debug = Serial;
+void debugInit()
+{
+  debug.begin(9600);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Serial port service
 // Allow bytes to accumulate in serial buffer until serialTimeoutMs has elapsed and no
@@ -59,9 +71,9 @@ void assertfail(char *file, long line)
 HardwareSerial &victronData = Serial1; // Serial port used to receive Victron data. On Arduino Mega 2560, this can point to Serial1, 2, or 3; on others, to Serial
 unsigned long lastCharRxMs;           // millisecond timestamp when last increment of available bytes was detected
 unsigned short lastCharCount;         // Tracks fullness of serial buffer
-const unsigned long serialTimeoutMs = 50;  // Time after last character received, to declare the packet received and parse it
+const unsigned long serialTimeoutMs = 5;  // Time after last character received, to declare the packet received and parse it
 
-void serviceSerialInit()
+void serviceDatastreamInit()
 {
 //  while (!victronData) {
 //    ; // wait for serial port to connect. Needed for Leonardo only
@@ -75,7 +87,7 @@ void serviceSerialInit()
 }
 
 // Returns true on the call when the packet gets parsed
-bool serviceSerial()
+bool serviceDatastream()
 {
   unsigned long now = millis();
 
@@ -94,6 +106,12 @@ bool serviceSerial()
   // If no new characters arrived in the buffer (if they did, code would have returned above), and if elapsed time since last 
   // character was received is beyond the timeout threshold, parse the packet, reset indicators to empty, and return true.
   if (now - lastCharRxMs > serialTimeoutMs) {
+
+//    debug.println("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+//    int i = lastCharCount;
+//    while(i--)
+//      debug.write(victronData.read());
+//    debug.println("\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 
     ParsePacket(lastCharCount);
     
@@ -199,13 +217,16 @@ void ParsePacket(long nchars)
   // For each field
   while (nchars) {
     
+    debug.print("Nchars: "); debug.println(nchars);    
+    
     // read the field label into buffer
     readElement(nchars, checksum, '\t');
+    debug.print("Element: "); debug.println(buf);
     
     // search for field tag
     fieldIndex = -1;
     for (int i=0; i<COUNT_OF(fieldDescriptors); i++) {
-      if (0 == strcmp(buf, fieldDescriptors[i].tag)) {
+      if (0 == strcasecmp(buf, fieldDescriptors[i].tag)) {
         fieldIndex = fieldDescriptors[i].index;
         fieldType = fieldDescriptors[i].type;
       }
@@ -233,6 +254,11 @@ void ParsePacket(long nchars)
       case FT_int:
       case FT_bool:
         value = atol(buf);
+        
+        debug.print(fieldDescriptors[fieldIndex].tag);
+        debug.print("=");
+        debug.println(value);
+        
         // TODO: something with value
         break;
       case FT_ON_OFF:
