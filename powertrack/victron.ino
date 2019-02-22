@@ -111,7 +111,7 @@ struct fd {
 };
 
 // Field type enumerations
-const byte FT_int =     1;  // millivolts
+const byte FT_int =     1;  // mV, mA, W or 0.01kWh
 const byte FT_ON_OFF =  2;  // "OFF" / "ON" in string, --> 0 / 1
 const byte FT_bool =    3;  // 0 or 1
 const byte FT_string =  4;
@@ -221,6 +221,7 @@ void ParsePacket()
       case FT_int:
       case FT_bool:
         value = atol(buf);
+        accumulateSample(fieldIndex, value);
         
         debug.print(fieldDescriptors[fieldIndex].tag);
         debug.print("=");
@@ -234,6 +235,12 @@ void ParsePacket()
       case FT_checksum:
         ASSERT(0 == checksum);
         debug.print("Checksum: "); debug.println((int)checksum);
+        if (0 == checksum) {
+          logger_finalizeSample();
+        }
+        else
+          logger_init();
+        
         // do something with this information
         break;
       case FT_string:

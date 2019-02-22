@@ -10,6 +10,7 @@ void setup()
   lastLoopBegin = millis();
   serviceVictronDatastreamInit();
   debugInit();
+  logger_init();
 }
 
 void loop()
