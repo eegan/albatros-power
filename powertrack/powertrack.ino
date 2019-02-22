@@ -1,5 +1,5 @@
-const unsigned long loopInterval = 200;
-const unsigned long mainLoopSleepTimeMs = 100;
+const unsigned long loopInterval = 200;           // main loop pace (interval between runs)
+const unsigned long mainLoopSleepTimeMs = 100;    // time to sleep
 unsigned long lastLoopBegin;
 
 typedef unsigned long UINT32;
@@ -18,6 +18,7 @@ void loop()
   // TODO: implement sleep
   #if 0
   long sinceLastLoopBegin;
+  
   unsigned long now;
   do {
     delay(mainLoopSleepTimeMs); // TODO: replace with power-down sleep, but maybe not - maybe just during non-reception of serial chars
@@ -25,6 +26,7 @@ void loop()
     sinceLastLoopBegin = now - lastLoopBegin;
   }
   while (sinceLastLoopBegin < loopInterval);
+  
   lastLoopBegin = now;
   #endif
   serviceDatastream();
@@ -78,43 +80,63 @@ const unsigned long serialTimeoutMs = 5;  // Time after last character received,
 
 void serviceDatastreamInit()
 {
-//  while (!victronData) {
-//    ; // wait for serial port to connect. Needed for Leonardo only
-//  }
-
   victronData.begin(19200);  // Victron baud rate
   victronData.setTimeout(0); // this apparently works to set infinite timeout which is what we want
 
   initbuffers();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+// Circular buffer
+///////////////////////////////////////////////////////////////////////////////////////////
 const int CBLEN = 250;
-const int LBBLEN = 10;
 const char cbstring[] = "sum\t";
 const int CBRETAIN = 5; // length of string + 1 for the actual checksum
 
 char circbuf[CBLEN];
+
+UINT16 cbin, cbout;
+
+char nextchar() {
+  char c = circbuf[cbout++];  
+  if (cbout >= CBLEN) cbout = 0;
+  return c;
+}
+
+int available() {
+  int count = cbin - cbout;
+  if (count < 0) count += CBLEN;
+  return count;
+}
+
+void cbinit() {
+  cbin = cbout = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Look-back buffer
+///////////////////////////////////////////////////////////////////////////////////////////
+const int LBBLEN = 10;
 char lbbuf[LBBLEN];
+UINT16 lbin;
+void lbbinit() {
+  lbin = 0;
+}
 
-UINT16 cbin, cbout, lbin;
-
+// initialize state
 void initbuffers()
 {
-  debug.println("initializing");
-  cbout = cbin = lbin = 0;
+  //debug.println("initializing");
+  cbinit();
+  lbbinit();
 }
 
 // Returns true on the call when the packet gets parsed
 bool serviceDatastream()
 {
     // while we have data to read
-#if 1
     while(victronData.available()) {
       char c = victronData.read();
-#else
-    while(debug.available()) {
-      char c = debug.read();
-#endif
       // put it in the circular buffer
       circbuf[cbin++] = c;
       if (cbin == CBLEN) cbin = 0;  // wrap input pointer
@@ -134,8 +156,6 @@ bool serviceDatastream()
 
       // check for match and parse if so
       if (0 == memcmp(cbstring, lbbuf+lbin-CBRETAIN, CBRETAIN-1)) {
-        debug.print("cbin :"); debug.println(cbin);
-        debug.print("cbout:"); debug.println(cbout);        
         ParsePacket();
         initbuffers();
       }
@@ -149,9 +169,11 @@ bool serviceDatastream()
 const int buflen = 20;
 char buf[buflen];
 
-////////////////////////
-// Victron field table
-////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+// Parser
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Field table
 struct fd {
   char *tag;  // the string we expect to see from the Victron
   byte index; // an index into the result array
@@ -187,18 +209,18 @@ const byte FI_MPPT  = 18;
 const byte FI_Checksum = 19;
 
 struct fd fieldDescriptors[] = {
-   {"V",      FI_V,     FT_int} 
-  ,{"VPV",    FI_VPV,   FT_int} 
-  ,{"PPV",    FI_PPV,   FT_int} 
-  ,{"I",      FI_I,     FT_int} 
-  ,{"IL",     FI_IL,    FT_int} 
-  ,{"LOAD",   FI_ILOAD, FT_ON_OFF} 
-  ,{"Relay",  FI_Relay, FT_ON_OFF} 
-  ,{"H19",    FI_H19,   FT_int} 
-  ,{"H20",    FI_H20,   FT_int} 
-  ,{"H21",    FI_H20,   FT_int} 
-  ,{"H22",    FI_H20,   FT_int} 
-  ,{"H23",    FI_H20,   FT_int} 
+   {"V",      FI_V,     FT_int}   // main battery voltage (mV)
+  ,{"VPV",    FI_VPV,   FT_int}   // panel voltage (mV)
+  ,{"PPV",    FI_PPV,   FT_int}   // panel power (W)
+  ,{"I",      FI_I,     FT_int}   // battery current (mA, signed)
+  ,{"IL",     FI_IL,    FT_int}   // load current (does not appear on 150/35)
+  ,{"LOAD",   FI_ILOAD, FT_ON_OFF} // load state (does not appear on 150/35)
+  ,{"Relay",  FI_Relay, FT_ON_OFF}  // relay state (does not appear on 150/35)
+  ,{"H19",    FI_H19,   FT_int}   // total yield (resettable) x 0.01kWh
+  ,{"H20",    FI_H20,   FT_int}   // yield today x 0.01kWh
+  ,{"H21",    FI_H20,   FT_int}   // max power today (W)
+  ,{"H22",    FI_H20,   FT_int}   // yield yesterday x 0.01kWh
+  ,{"H23",    FI_H20,   FT_int}   // max power yesterday (W)
   ,{"ERR",    FI_ERR,   FT_int} 
   ,{"CS",     FI_CS,    FT_int} 
   ,{"FW",     FI_FW,    FT_string} 
@@ -221,16 +243,11 @@ void ParsePacket()
   byte fieldIndex;
   byte fieldType;
 
-
   char c;
-//  debug.write("\n>>>");
+
+  // read until we see 'P' for PID field; there shouldn't be any in any hex data in between packets
   while (circbuf[cbout] != 'P')
     nextchar();
-
-  // For now, just spit out the packet
-//  while (available())
-//    debug.write(nextchar());
-//  debug.write("<<<\n");
 
   // initialize checksum to what came right before the 'P' we scanned for
   char checksum = '\r' + '\n';
@@ -242,7 +259,7 @@ void ParsePacket()
     
     // read the field label into buffer
     readElement(checksum, '\t');
-    debug.print("Element: "); debug.println(buf);
+    //debug.print("Element: "); debug.println(buf);
     
     // search for field tag
     fieldIndex = -1;
@@ -286,6 +303,7 @@ void ParsePacket()
         break;
       case FT_checksum:
         ASSERT(0 == checksum);
+        debug.print("Checksum: "); debug.println((int)checksum);
         // do something with this information
         break;
       default:
@@ -296,20 +314,6 @@ void ParsePacket()
  // TODO: check if checksum = 0, or just store it    
    
 }
-
-char nextchar() {
-  char c = circbuf[cbout++];  
-  if (cbout >= CBLEN) cbout = 0;
-  return c;
-}
-
-int available() {
-  int count = cbin - cbout;
-  if (count < 0) count += CBLEN;
-  return count;
-}
-
-//void readElement();
 
 void readElement(char &checksum, char terminator) {
 
