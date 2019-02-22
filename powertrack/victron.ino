@@ -64,14 +64,15 @@ void initbuffers()
 bool serviceDatastream()
 {
     // while we have data to read
-    while(victronData.available()) {
+    while(0 != victronData.available()) {
       char c = victronData.read();
+      
       // put it in the circular buffer
       circbuf[cbin++] = c;
-      if (cbin == CBLEN) cbin = 0;  // wrap input pointer
+      if (cbin >= CBLEN) cbin = 0;  // wrap input pointer
       if (cbout == cbin) {
         cbout++;   // if buffer overflowed, drop the oldest character by bumping output pointer
-        if (cbout == CBLEN) cbout = 0;  // wrap output pointer
+        if (cbout >= CBLEN) cbout = 0;  // wrap output pointer
       }
 
       // check whether lookback buffer is full, if so, make room, copying CBRETAIN bytes back to start
@@ -147,9 +148,9 @@ struct fd fieldDescriptors[] = {
   ,{"Relay",  FI_Relay, FT_ON_OFF}  // relay state (does not appear on 150/35)
   ,{"H19",    FI_H19,   FT_int}   // total yield (resettable) x 0.01kWh
   ,{"H20",    FI_H20,   FT_int}   // yield today x 0.01kWh
-  ,{"H21",    FI_H20,   FT_int}   // max power today (W)
-  ,{"H22",    FI_H20,   FT_int}   // yield yesterday x 0.01kWh
-  ,{"H23",    FI_H20,   FT_int}   // max power yesterday (W)
+  ,{"H21",    FI_H21,   FT_int}   // max power today (W)
+  ,{"H22",    FI_H22,   FT_int}   // yield yesterday x 0.01kWh
+  ,{"H23",    FI_H23,   FT_int}   // max power yesterday (W)
   ,{"ERR",    FI_ERR,   FT_int} 
   ,{"CS",     FI_CS,    FT_int} 
   ,{"FW",     FI_FW,    FT_string} 
@@ -235,6 +236,10 @@ void ParsePacket()
         debug.print("Checksum: "); debug.println((int)checksum);
         // do something with this information
         break;
+      case FT_string:
+        debug.print(fieldDescriptors[fieldIndex].tag);
+        debug.print("=");
+        debug.println(buf);
       default:
         ASSERT(0);
     }
