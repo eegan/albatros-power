@@ -2,6 +2,9 @@ const unsigned long loopInterval = 200;
 const unsigned long mainLoopSleepTimeMs = 100;
 unsigned long lastLoopBegin;
 
+typedef unsigned long UINT32;
+typedef unsigned short UINT16;
+
 void setup()
 {
   lastLoopBegin = millis();
@@ -81,50 +84,62 @@ void serviceDatastreamInit()
 
   victronData.begin(19200);  // Victron baud rate
   victronData.setTimeout(0); // this apparently works to set infinite timeout which is what we want
-    
-  lastCharCount = 0;
-  lastCharRxMs = millis();
+
+  initbuffers();
+}
+
+const int CBLEN = 250;
+const int LBBLEN = 10;
+const char cbstring[] = "sum\t";
+const int CBRETAIN = 5; // length of string + 1 for the actual checksum
+
+char circbuf[CBLEN];
+char lbbuf[LBBLEN];
+
+UINT16 cbin, cbout, lbin;
+
+void initbuffers()
+{
+  debug.println("initializing");
+  cbout = cbin = lbin = 0;
 }
 
 // Returns true on the call when the packet gets parsed
 bool serviceDatastream()
 {
-  unsigned long now = millis();
+    // while we have data to read
+#if 1
+    while(victronData.available()) {
+      char c = victronData.read();
+#else
+    while(debug.available()) {
+      char c = debug.read();
+#endif
+      // put it in the circular buffer
+      circbuf[cbin++] = c;
+      if (cbin == CBLEN) cbin = 0;  // wrap input pointer
+      if (cbout == cbin) {
+        cbout++;   // if buffer overflowed, drop the oldest character by bumping output pointer
+        if (cbout == CBLEN) cbout = 0;  // wrap output pointer
+      }
 
-  // If there are no bytes in the buffer, return false
-  if (0 == victronData.available())
-    return false;
+      // check whether lookback buffer is full, if so, make room, copying CBRETAIN bytes back to start
+      if (lbin == LBBLEN) {
+        memmove(lbbuf, lbbuf+LBBLEN-CBRETAIN, CBRETAIN);
+        lbin = CBRETAIN;  // adjust byte count
+      }
 
-  // If there are bytes in the buffer, and if there is a new one since the last run,
-  // reset the indicators (character count and last time a character was seen)
-  if (victronData.available() > lastCharCount) {
-    lastCharCount = victronData.available();
-    lastCharRxMs = now;
-    return false;
-  }
+      // add character to lookback buffer
+      lbbuf[lbin++] = c;
 
-  // If no new characters arrived in the buffer (if they did, code would have returned above), and if elapsed time since last 
-  // character was received is beyond the timeout threshold, parse the packet, reset indicators to empty, and return true.
-  if (now - lastCharRxMs > serialTimeoutMs) {
-
-//    debug.println("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-//    int i = lastCharCount;
-//    while(i--)
-//      debug.write(victronData.read());
-//    debug.println("\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-
-    ParsePacket(lastCharCount);
-    
-    lastCharCount = 0;
-    lastCharRxMs = now;
-
-    // TODO: handle case where packet parse fails
-    return true;
-  }
-
-  // else, there are no new bytes in the buffer, but we haven't reached the timeout yet
-  else
-    return false;
+      // check for match and parse if so
+      if (0 == memcmp(cbstring, lbbuf+lbin-CBRETAIN, CBRETAIN-1)) {
+        debug.print("cbin :"); debug.println(cbin);
+        debug.print("cbout:"); debug.println(cbout);        
+        ParsePacket();
+        initbuffers();
+      }
+    }    
 }
 
 // Macro to return number of elements in an array
@@ -200,27 +215,33 @@ struct fd fieldDescriptors[] = {
 // TODO: 
 // Deal with any asserts that need coding to recover from e.g. a serial data error
 
-void ParsePacket(long nchars)
+void ParsePacket()
 {
-  #if true
+
   byte fieldIndex;
   byte fieldType;
-  
-  // read through the first newline
-  nchars -= victronData.readBytes(buf, 2);
 
-  // initialize value of checksum to what we expect to read first
+
+  char c;
+//  debug.write("\n>>>");
+  while (circbuf[cbout] != 'P')
+    nextchar();
+
+  // For now, just spit out the packet
+//  while (available())
+//    debug.write(nextchar());
+//  debug.write("<<<\n");
+
+  // initialize checksum to what came right before the 'P' we scanned for
   char checksum = '\r' + '\n';
   
-  ASSERT (buf[0] == '\r' && buf[1] == '\n')
-
   // For each field
-  while (nchars) {
+  while (available()) {
     
-    debug.print("Nchars: "); debug.println(nchars);    
+    //debug.print("available: "); debug.println(available());    
     
     // read the field label into buffer
-    readElement(nchars, checksum, '\t');
+    readElement(checksum, '\t');
     debug.print("Element: "); debug.println(buf);
     
     // search for field tag
@@ -237,13 +258,12 @@ void ParsePacket(long nchars)
     ASSERT(-1 != fieldIndex) // or it wasn't found :(
 
     // read the field value into buffer
-    readElement(nchars, checksum, '\r');
+    readElement(checksum, '\r');
 
     // Checksum and discard the linefeed between fields (if it's there). It should be 
     // there, unless we're at the last (checksum) field
-    if (nchars > 0) {
-      nchars --;
-      char c = victronData.read();
+    if (available()) {
+      char c = nextchar();
       ASSERT('\n' == c)
       checksum += c; // should be '\n'
     }
@@ -275,42 +295,42 @@ void ParsePacket(long nchars)
 
  // TODO: check if checksum = 0, or just store it    
    
-  #else
-  
-  // For now, just spit out the packet
-  int c;
-  victronData.write("\n>>>");
-  while ((c = victronData.read()) != -1)
-    victronData.write(c);
-  victronData.write("<<<\n");
-  #endif
+}
+
+char nextchar() {
+  char c = circbuf[cbout++];  
+  if (cbout >= CBLEN) cbout = 0;
+  return c;
+}
+
+int available() {
+  int count = cbin - cbout;
+  if (count < 0) count += CBLEN;
+  return count;
 }
 
 //void readElement();
 
-void readElement(long &nchars, char &checksum, char terminator) {
+void readElement(char &checksum, char terminator) {
 
   // Prevent buffer overrun (use buflen, leaving room for terminal null)
   // Only expect up to amount that was available in packet (nchars): The last field won't 
   // terminate in \r\n, since this is at the start of the next packet
-  int maxToRead = min(buflen, nchars);
+  int maxToRead = min(buflen, available());
   int ellen;  // element length
   for (ellen = 0; ellen < maxToRead; ellen++) {
-    buf[ellen] = victronData.read();
+    buf[ellen] = nextchar();
     checksum += buf[ellen];
     if (buf[ellen] == terminator)
       break;
   }
-
-  // subtract ellen+1 for the terminator (if seen) or ellen if not seen
-  nchars -= buf[ellen] == terminator? (ellen +1) : ellen;
 
   // In most cases, the terminator is the last character read
   // Only for the last element (checksum value) do we not expect to necessarily see the terminator, 
   // since actually the \r\n is prepended to the start of each field, and will show up at the start
   // of the next packet. In this instance, nchars should be zero since we've read the whole thing.
    
-  ASSERT(buf[ellen] == terminator || nchars == 0)
+  //ASSERT(buf[ellen] == terminator || nchars == 0)
   // replace the terminator so it's a nice string
   // note that we will also overwrite the checksum byte but that's okay since we've checksummed it
   // and we'll check the checksum later
