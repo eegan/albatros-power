@@ -102,6 +102,7 @@ char buf[BUFLEN];
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Parser
 ///////////////////////////////////////////////////////////////////////////////////////////
+logDataType parsedData[COUNT_OF(fieldDescriptors)];
 
 // Read and parse the Victron packet
 // Refer to Victron VE.Direct Protocol document
@@ -109,14 +110,11 @@ char buf[BUFLEN];
 // TODO: 
 // Deal with any asserts that need coding to recover from e.g. a serial data error
 
-long * victron_parsePacket() //TODO: get to work with UINT16
+void victron_parsePacket() //TODO: get to work with UINT16
 {
 
   byte fieldIndex;
   byte fieldType;
-
-  // array (of int32's) to return
-  static logDataType parsed[COUNT_OF(fieldDescriptors)];
 
   char c;
 
@@ -190,7 +188,7 @@ long * victron_parsePacket() //TODO: get to work with UINT16
         break;
       case FT_string:
         // TODO: deal with these. atol seems like the most sane.
-        ///*
+        // what we should do is only at the beginning, print out in our event log, stuff like serial numberm, Victron firmware version etc
         debug.print(fieldDescriptors[fieldIndex].tag);
         debug.print("=");
         debug.println(buf);
@@ -200,9 +198,9 @@ long * victron_parsePacket() //TODO: get to work with UINT16
       default:
         ASSERT(0);
     }
-    parsed[fieldIndex] = value;
+    parsedData[fieldIndex] = value;
   }
- return parsed;
+
 }
 
 void victron_readElement(char &checksum, char terminator) {
