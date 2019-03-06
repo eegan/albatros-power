@@ -1,6 +1,4 @@
 #include <EEPROM.h>
-typedef unsigned long UINT32;
-typedef unsigned short UINT16;
 
 // Tell it where to store your config data in EEPROM
 #define CONFIG_START 32
