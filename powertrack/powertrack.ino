@@ -30,7 +30,7 @@ void loop()
   lastLoopBegin = now;
   #endif
   victron_serviceDatastream();
-  
+  logger_save();
 }
 
 

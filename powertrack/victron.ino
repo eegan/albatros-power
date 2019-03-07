@@ -92,9 +92,6 @@ bool victron_serviceDatastream()
     }    
 }
 
-// Macro to return number of elements in an array
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
-
 // Buffer for reading elements (field tag and field value)
 const int BUFLEN = 20;
 char buf[BUFLEN];
@@ -109,14 +106,13 @@ char buf[BUFLEN];
 // TODO: 
 // Deal with any asserts that need coding to recover from e.g. a serial data error
 
-long * victron_parsePacket() //TODO: get to work with UINT16
+extern logDataType parsed[];
+
+void victron_parsePacket() // ALWAYS modifies the same array
 {
 
   byte fieldIndex;
   byte fieldType;
-
-  // array (of int32's) to return
-  static logDataType parsed[COUNT_OF(fieldDescriptors)];
 
   char c;
 
@@ -202,7 +198,6 @@ long * victron_parsePacket() //TODO: get to work with UINT16
     }
     parsed[fieldIndex] = value;
   }
- return parsed;
 }
 
 void victron_readElement(char &checksum, char terminator) {
