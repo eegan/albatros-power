@@ -71,9 +71,6 @@ struct fd fieldDescriptors[] = {
 // Macro to return number of elements in an array
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
-<<<<<<< HEAD
 // array that data is passed around in
-static logDataType parsed[COUNT_OF(fieldDescriptors)];
-=======
+static logDataType parsed_data[COUNT_OF(fieldDescriptors)];
 #endif
->>>>>>> 3e66e2cb8e7bd706a434cf0df8c5144d58725b71

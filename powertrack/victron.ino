@@ -107,15 +107,10 @@ logDataType parsedData[COUNT_OF(fieldDescriptors)];
 // TODO: 
 // Deal with any asserts that need coding to recover from e.g. a serial data error
 
-<<<<<<< HEAD
-extern logDataType parsed[];
+extern logDataType parsed_data[];
 
 void victron_parsePacket() // ALWAYS modifies the same array
-=======
-void victron_parsePacket() //TODO: get to work with UINT16
->>>>>>> 3e66e2cb8e7bd706a434cf0df8c5144d58725b71
 {
-
   byte fieldIndex;
   byte fieldType;
 
@@ -201,12 +196,8 @@ void victron_parsePacket() //TODO: get to work with UINT16
       default:
         ASSERT(0);
     }
-    parsedData[fieldIndex] = value;
+    parsed_data[fieldIndex] = value;
   }
-<<<<<<< HEAD
-=======
-
->>>>>>> 3e66e2cb8e7bd706a434cf0df8c5144d58725b71
 }
 
 void victron_readElement(char &checksum, char terminator) {
