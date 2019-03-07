@@ -1,9 +1,14 @@
+#ifndef MYTYPES_H
+#define MYTYPES_H
+
 typedef unsigned long UINT32;
 typedef unsigned short UINT16;
 
 typedef long logDataType;
 
 // Field table
+
+
 
 struct fd {
   char *tag;  // the string we expect to see from the Victron
@@ -17,6 +22,7 @@ const byte FT_ON_OFF =  2;  // "OFF" / "ON" in string, --> 0 / 1
 const byte FT_bool =    3;  // 0 or 1
 const byte FT_string =  4;
 const byte FT_checksum = 5; // single byte, could be anything, special treatment
+const byte FT_enum = 6;     // discrete codes
 
 const byte FI_V     = 0;
 const byte FI_VPV   = 1;
@@ -52,18 +58,22 @@ struct fd fieldDescriptors[] = {
   ,{"H21",    FI_H21,   FT_int}   // max power today (W)
   ,{"H22",    FI_H22,   FT_int}   // yield yesterday x 0.01kWh
   ,{"H23",    FI_H23,   FT_int}   // max power yesterday (W)
-  ,{"ERR",    FI_ERR,   FT_int} 
-  ,{"CS",     FI_CS,    FT_int} 
+  ,{"ERR",    FI_ERR,   FT_enum} 
+  ,{"CS",     FI_CS,    FT_enum} 
   ,{"FW",     FI_FW,    FT_string} 
   ,{"PID",    FI_PID,   FT_string} 
   ,{"SER#",   FI_SER,   FT_string} 
   ,{"HSDS",   FI_HSDS,  FT_int} 
-  ,{"MPPT",   FI_MPPT,  FT_int}
+  ,{"MPPT",   FI_MPPT,  FT_enum}
   ,{"Checksum", FI_Checksum, FT_checksum} // field ID may never be used??
 };
 
 // Macro to return number of elements in an array
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
+<<<<<<< HEAD
 // array that data is passed around in
 static logDataType parsed[COUNT_OF(fieldDescriptors)];
+=======
+#endif
+>>>>>>> 3e66e2cb8e7bd706a434cf0df8c5144d58725b71
