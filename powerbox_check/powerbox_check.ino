@@ -14,8 +14,8 @@
  * -> talks to both Serial (the USB serial) and Serial1 (the stereo jack)
  * -> prints "connected." to both com. ports at the beginning so you know it's alive
  * -> victron communication is through Serial2 at 19200 baud
- * -> this program will work through charaters in a line, ie "gg" will toggle the
- *    green led twice
+ * -> this program will work through charaters in a line, ie "rg" will toggle the
+ *    red then the green led
  * -> If you are using the stereo jack serial, it is suggested to plug that in
  *    before powering up the Arduino, so you don't miss anything
  */
