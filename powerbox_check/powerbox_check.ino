@@ -11,11 +11,13 @@
  * -> s | append the line "this,is,data" to REALDATA.CSV on the SD card
  * 
  * Notes:
- * -> talks to both Serial (the USB serial) and Serial2 (the stereo jack)
+ * -> talks to both Serial (the USB serial) and Serial1 (the stereo jack)
  * -> prints "connected." to both com. ports at the beginning so you know it's alive
- * -> victron communication is through Serial1 at 19200 baud
+ * -> victron communication is through Serial2 at 19200 baud
  * -> this program will work through charaters in a line, ie "gg" will toggle the
  *    green led twice
+ * -> If you are using the stereo jack serial, it is suggested to plug that in
+ *    before powering up the Arduino, so you don't miss anything
  */
 
 #include <SoftwareSerial.h>
@@ -24,16 +26,14 @@
 
 // hardware settings
 
-// these are ints so I can pass them to togglePin()
-int pinRed = 7;
-int pinGrn = 6;
-int pinSSR = 5;
+int pinRed = 7; // red led pin
+int pinGrn = 6; // green led pin
+int pinSSR = 5; // solid state relay (load toggle) pin 
 
 RTC_PCF8523 rtc;
 DateTime present;
 
-// this doesn't need to be passed anywhere
-#define pinSD 10
+#define pinSD 10 // I don't really know; makes the SD work
 
 //program-specific variables
 char command;
@@ -46,51 +46,66 @@ int togglesRed = 0;
 int togglesGrn = 0;
 int togglesSSR = 0;
 
-void talk(char* message) {
+void talk(char* message) { // helps me talk to two serials at once
   Serial.print(message);
-  Serial2.print(message);
+  Serial1.print(message);
 }
 
-void talkln(char* message) {
+void talkln(char* message) { // sometimes I like a \n too
   Serial.println(message);
-  Serial2.println(message);
+  Serial1.println(message);
 }
 
-int togglePin(int counter, int pin) {
+int togglePin(int counter, int pin) { // toggle the state of a digital pin
   counter++;
   if (counter%2) {
-    digitalWrite(pin, LOW);
-  } else {
     digitalWrite(pin, HIGH);
+  } else {
+    digitalWrite(pin, LOW);
   }
   return counter;
 }
 
-void execute(char command) {
+void sayState(int counter) { // display state of a digital pin (or really whether its counter is even)
+  if (counter%2) {
+    talkln("on");
+  } else {
+    talkln("off");
+  }
+}
+
+void execute(char command) { // the meat of the program, take a char and do corresponding thing, if any
   switch(command) {
     case 'l':
       togglesSSR = togglePin(togglesSSR, pinSSR);
       talk("solid state relay toggled ");
-      talk(togglesSSR);
-      talkln(" times.");
+      sayState(togglesSSR);
+      break;
     case 'g':
       togglesGrn = togglePin(togglesGrn, pinGrn);
       talk("green LED toggled ");
-      talk(togglesGrn);
-      talkln(" times.");      
+      sayState(togglesGrn);  
+      break;    
     case 'r':
       togglesRed = togglePin(togglesRed, pinRed);
       talk("red LED toggled ");
-      talk(togglesRed);
-      talkln(" times.");
+      sayState(togglesRed);
+      break;
     case 'v':
       victrON = !victrON;
       talk("display victron data stream: ");
-      talkln(victrON);
+      if (victrON) {
+        talkln("true");
+      } else {
+        talkln("false");
+      }
+      break;
     case 't':
       present = rtc.now();
       talk("UNIX time: ");
-      talkln(present.unixtime());     
+      Serial.println(present.unixtime()); 
+      Serial1.println(present.unixtime()); // talk() only likes char*, not long 
+      break;   
     case 's':
       datafile = SD.open(filename, FILE_WRITE);
       if (datafile) {
@@ -98,8 +113,11 @@ void execute(char command) {
         datafile.close();
         talkln("successfully written. go check!");
       } else {
-        talk("error opening file on SD");
+        talk("ERR: couldn't open file on SD");
       }
+      break;
+    case '\n': // so it doesn't complain when you hit enter
+      break; 
     default:
       talkln("command not recognised.");
   }
@@ -108,8 +126,8 @@ void execute(char command) {
 void setup() {
   // init serial
   Serial.begin(9600);
-  Serial2.begin(9600);
-  Serial1.begin(19200);
+  Serial1.begin(9600);
+  Serial2.begin(19200);
   talkln("connected.");
 
   // init digital pins
@@ -144,19 +162,21 @@ void loop() {
 
   // if we want to, and it exists, regurgitate victron data
   if (victrON) {
-    while (Serial1.available()) { 
-      serialbuf = Serial1.read();
-      talk(serialbuf);
+    while (Serial2.available()) { 
+      serialbuf = Serial2.read();
+      Serial.print(serialbuf);
+      Serial1.print(serialbuf);
     }
   }
 
+  // await further commands
   while (Serial.available()) {
     command = Serial.read();
     execute(command);
   }
 
-  while (Serial2.available()) {
-    command = Serial2.read();
+  while (Serial1.available()) {
+    command = Serial1.read();
     execute(command);
   }
 }
