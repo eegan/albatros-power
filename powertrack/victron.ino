@@ -92,9 +92,6 @@ bool serviceDatastream()
     }    
 }
 
-// Macro to return number of elements in an array
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
-
 // Buffer for reading elements (field tag and field value)
 const int BUFLEN = 20;
 char buf[BUFLEN];
@@ -221,7 +218,7 @@ void ParsePacket()
       case FT_int:
       case FT_bool:
         value = atol(buf);
-        accumulateSample(fieldIndex, value);
+        logger_accumulateSample(fieldIndex, value);
         
         debug.print(fieldDescriptors[fieldIndex].tag);
         debug.print("=");

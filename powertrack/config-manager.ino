@@ -1,7 +1,4 @@
 #include <EEPROM.h>
-typedef unsigned long UINT32;
-typedef unsigned short UINT16;
-
 // Tell it where to store your config data in EEPROM
 #define CONFIG_START 32
 
@@ -11,8 +8,6 @@ const UINT32 FW_VERSION = 0x10000;  // the current firmware version
 
 bool configNew = false;
 const UINT32 MAGIC = 0xABCD1234;
-
-HardwareSerial &monitorPort = Serial;
 
 struct valstructtag {
   // validate settings
@@ -32,7 +27,7 @@ struct valstructtag {
   , 0xDEADBEEF 
 };
 
-void loadConfig() {
+void cfgman_loadConfig() {
   // read out the validation sub-struct
   for (UINT16 i=0; i<sizeof cfg.validation; i++)
     ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
@@ -55,11 +50,21 @@ void loadConfig() {
       ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
 }
 
-void saveConfig() {
+void cfgman_saveConfig() {
     for (UINT16 i=0; i<sizeof cfg; i++)
       EEPROM.write(CONFIG_START + i, *((char*)&cfg + i));
 }
 
+
+
+void cfgman_dumpParameters() {
+  monitorPort.write("magic:    "); monitorPort.println(cfg.validation.magic, 16);
+  monitorPort.write("cfglev:   "); monitorPort.println(cfg.validation.cfg_level, 10);
+  monitorPort.write("new:      "); monitorPort.println(configNew, 10);
+}
+
+
+/*
 void handleMonitor()
 {
   const UINT16 BUFLEN = 100;
@@ -75,12 +80,7 @@ void handleMonitor()
     }
   }  
 }
-
-void dumpParameters() {
-  monitorPort.write("magic:    "); monitorPort.println(cfg.validation.magic, 16);
-  monitorPort.write("cfglev:   "); monitorPort.println(cfg.validation.cfg_level, 10);
-  monitorPort.write("new:      "); monitorPort.println(configNew, 10);
-}
+*/
 
 #if 0
 void setup() {

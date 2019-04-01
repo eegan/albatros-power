@@ -1,3 +1,5 @@
+#include "mytypes.h"
+
 const unsigned long loopInterval = 200;           // main loop pace (interval between runs)
 const unsigned long mainLoopSleepTimeMs = 100;    // time to sleep
 unsigned long lastLoopBegin;
@@ -5,12 +7,16 @@ unsigned long lastLoopBegin;
 typedef unsigned long UINT32;
 typedef unsigned short UINT16;
 
+HardwareSerial &monitorPort = Serial;
+
 void setup()
 {
+  cfgman_loadConfig();
   lastLoopBegin = millis();
   serviceVictronDatastreamInit();
   debugInit();
   logger_init();
+  monitor_init();
 }
 
 void loop()
@@ -31,6 +37,9 @@ void loop()
   lastLoopBegin = now;
   #endif
   serviceDatastream();
+  if (monitorPort.available()) {
+    monitor_handle();
+  }
 }
 
 
