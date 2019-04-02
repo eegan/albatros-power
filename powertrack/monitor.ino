@@ -41,11 +41,14 @@ void monitor_handle() {
     strcpy(args[i], "           ");
   }
   argnum = 0;
-  while (argument != NULL && argnum < MAX_ARG_NUM && sizeof argument <= MAX_ARG_LEN)  {
-    strcpy(args[argnum], argument);
+  while (argument != NULL && argnum < MAX_ARG_NUM && sizeof argument <= MAX_ARG_LEN)  { // what is the idea of the 3rd condition??? I think you want strlen, but in any case, stopping if it's exceeded is maybe not the right thing to do. (EE)
+    strcpy(args[argnum], argument); // you would also need to subtract or add one to account for the null (EE)
     argnum++;
   }
 
+
+  // lots of repeated code (EE)
+  
   // do thing. 
   // nested ifs seem both most explicit and easy
   // TODO: add helpful messages if it doesn't get expected args
@@ -62,15 +65,16 @@ void monitor_handle() {
     cfgman_saveConfig();
   }
   else if (strcmp(args[0], "rtc") == 0) {
-    if (strcmp(args[1], blank) == 0) {
-      present = rtc.now().unixtime();
+    if (strcmp(args[1], blank) == 0) {  // are you sure you will have a second argument?? why not just check argnum?? (EE)
+      present = rtc.now().unixtime();   // I really think we will want YYYY/MM/DD HH:MM:SS
       monitorPort.print("current time: ");
       monitorPort.println(present);
     }
-    else if (strcmp(args[2], blank) != 0) {
+    else if (strcmp(args[2], blank) != 0) {  // a null string won't equal a bunch of blanks. If you mean "", put "". (EE)
       monitorPort.print("setting time to :");
       monitorPort.print(args[2]);
       set = DateTime(args[2]); // TODO: does this work?
+      // before trying to set it, try printing out the DateTime fields separately, to see if it parsed them OK (EE)
       rtc.adjust(set);
     }
   }
