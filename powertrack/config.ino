@@ -30,12 +30,17 @@ struct valstructtag {
   , 0xDEADBEEF 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// EEPROM field data structures
+// 4 entries must be maintained for each field
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Field types
 enum e_ft {
   FT_UINT32, FT_INT32, FT_TIME
 } ;
 
-
+// Index values - to be used by set/get accessors
 enum e_fndx {
   ndx_vbatCutoffMv, 
   ndx_measureStart, 
@@ -46,7 +51,7 @@ enum e_fndx {
   ndx_slope 
 };
 
-
+// The in-memory copy of the fields, with type tags
 struct {
   e_ft type;
   long value;
@@ -61,10 +66,14 @@ struct {
   
 };
 
+// The names of the fields
 char *fieldNames[] = 
 {
   "VBAT_CUTOFF_MV", "MEASURE_START",  "MEASURE_END", "DAY_START", "DAY_END", "HOURS_RESERVE", "SLOPE"       
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 char *fieldName(int ndx)
 {
@@ -146,6 +155,7 @@ void cfgmanCheckConfig() {
     cfg.validation.cfg_level = CONFIG_LEVEL;
 
     // save everything (using default values from initializers)
+    // TODO: this is lazy compared with just writing what we need
     cfgmanSaveConfig();
   }
   else {
