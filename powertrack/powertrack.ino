@@ -11,12 +11,12 @@ HardwareSerial &monitorPort = Serial;
 
 void setup()
 {
-  cfgman_loadConfig();
+  cfgmanInit();
   lastLoopBegin = millis();
   serviceVictronDatastreamInit();
   debugInit();
-  logger_init();
-  monitor_init();
+  loggerInit();
+  monitorInit();
 }
 
 void loop()

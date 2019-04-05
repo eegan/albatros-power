@@ -27,7 +27,12 @@ struct valstructtag {
   , 0xDEADBEEF 
 };
 
-void cfgman_loadConfig() {
+void cfgmanInit() {
+  cfgmanLoadConfig();
+}
+
+
+void cfgmanLoadConfig() {
   // read out the validation sub-struct
   for (UINT16 i=0; i<sizeof cfg.validation; i++)
     ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
@@ -62,33 +67,3 @@ void cfgman_dumpParameters() {
   monitorPort.write("cfglev:   "); monitorPort.println(cfg.validation.cfg_level, 10);
   monitorPort.write("new:      "); monitorPort.println(configNew, 10);
 }
-
-
-/*
-void handleMonitor()
-{
-  const UINT16 BUFLEN = 100;
-  char buf[BUFLEN];
-  if (UINT16 n = monitorPort.readBytesUntil('\r', buf, BUFLEN)) {
-    switch(buf[0]) {
-      case 'd':
-        dumpParameters();
-        break;
-      case 'w':
-        saveConfig(); 
-        break;     
-    }
-  }  
-}
-*/
-
-#if 0
-void setup() {
-  monitorPort.begin(9600);
-  loadConfig();
-}
-
-void loop() {
-  handleMonitor();
-}
-#endif

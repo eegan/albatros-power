@@ -227,7 +227,7 @@ void ParsePacket()
         // TODO: something with value
         break;
       case FT_ON_OFF:
-        value = 0 == strcasecmp("on",buf);  // aka stricmp
+        value = 0 == strcasecmp("on", buf);  // aka stricmp
         break;
       case FT_checksum:
         ASSERT(0 == checksum);
@@ -236,7 +236,7 @@ void ParsePacket()
           logger_finalizeSample();
         }
         else
-          logger_init();
+          loggerInit();
         
         // do something with this information
         break;

@@ -7,16 +7,6 @@
 char mon_buf[MAX_BUF_LEN];
 bool error_flag = false;
 
-char *argument;
-char blank[MAX_BUF_LEN] = "           "; //HARDCODED "MAX_ARG_LEN"-many spaces
-char args[MAX_ARG_NUM][MAX_ARG_LEN]; // memory is not an issue, is it?
-UINT16 argnum = 0;
-UINT16 func; // function to be used
-UINT16 field; // field to modify
-UINT32 value; // value to change field to
-
-DateTime set;
-
 /*
  * COMMANDS:
  * -> 'dmp' dump contents of EEPROM
@@ -25,58 +15,59 @@ DateTime set;
  * -> 'rtc (unixtime)' no arg: display current time. w/ arg: set current time to that UNIX timestamp.
  */
 
-void monitor_init() {
+void monitorInit() {
   monitorPort.begin(9600);
   monitorPort.setTimeout(5000); // 5 seconds
+  monitorPort.println("ALBATROS power system serial monitor v 1.0");
 }
 
 void monitor_handle() {
-  // get a line
-  monitorPort.readBytesUntil('\r', mon_buf, MAX_BUF_LEN); // even if this halts all other operation, it won't for more than 5s
-  monitorPort.print(mon_buf); // when using the stereo jack you don't see what you typed. Here it is.
+  char *command, *arg1, *arg2;
+  
+  mon_buf[monitorPort.readBytesUntil('\r', mon_buf, MAX_BUF_LEN)] = 0;  // read and null-terminate
+
+  //monitorPort.print(mon_buf); // when using the stereo jack you don't see what you typed. Here it is.
 
   // parse the line into ' ' separated arguments
-  argument = strtok(mon_buf, ' ');
-  for (UINT16 i = 0; i < COUNT_OF(args); i++) {
-    strcpy(args[i], "           ");
-  }
-  argnum = 0;
-  while (argument != NULL && argnum < MAX_ARG_NUM && sizeof argument <= MAX_ARG_LEN)  { // what is the idea of the 3rd condition??? I think you want strlen, but in any case, stopping if it's exceeded is maybe not the right thing to do. (EE)
-    strcpy(args[argnum], argument); // you would also need to subtract or add one to account for the null (EE)
-    argnum++;
-  }
-
-
-  // lots of repeated code (EE)
+  command = strtok(mon_buf, " ");
+  arg1 = strtok(NULL, " ");
+  arg2 = strtok(NULL, " ");
   
-  // do thing. 
-  // nested ifs seem both most explicit and easy
-  // TODO: add helpful messages if it doesn't get expected args
-  if (strcmp(args[0], "dmp") == 0) {
+  // TODO: add help if nothing is recognized
+  if (0 == strcmp(command, "dmp")) {
     cfgman_dumpParameters();
   }
-  else if (strcmp(args[0], "mod") == 0) {
+  else if (0 == strcmp(command, "mod")) {
     // now looking for valid fields
-    if (strcmp(args[1], "test") == 0 && strcmp(args[2], blank) != 0) {
-      cfg.test = atol(args[2]);
-    }
+//    if (strcmp(args[1], "test") == 0 && strcmp(args[2], blank) != 0) {
+//      cfg.test = atol(args[2]);
+//    }
   }
-  else if (strcmp(args[0], "com") == 0) {
+  else if (0 == strcmp(command, "com")) {
     cfgman_saveConfig();
   }
-  else if (strcmp(args[0], "rtc") == 0) {
-    if (strcmp(args[1], blank) == 0) {  // are you sure you will have a second argument?? why not just check argnum?? (EE)
-      present = rtc.now().unixtime();   // I really think we will want YYYY/MM/DD HH:MM:SS
+  else if (0 == strcmp(command, "rtc")) {
+    if (NULL == *arg1) {  // no arguments - display time
+    
+      //present = rtc.now().unixtime();   // I really think we will want YYYY/MM/DD HH:MM:SS
       monitorPort.print("current time: ");
-      monitorPort.println(present);
+      monitorPort.println(rtcPresentTime());
     }
-    else if (strcmp(args[2], blank) != 0) {  // a null string won't equal a bunch of blanks. If you mean "", put "". (EE)
-      monitorPort.print("setting time to :");
-      monitorPort.print(args[2]);
-      set = DateTime(args[2]); // TODO: does this work?
-      // before trying to set it, try printing out the DateTime fields separately, to see if it parsed them OK (EE)
-      rtc.adjust(set);
+    else if (0 == strcmp(arg1, "date")) {  
+      monitorPort.print("setting date to: <");
+      monitorPort.print(arg2);
+      monitorPort.println(">");
+      rtcSetDate(arg2);
     }
+    else if (0 == strcmp(arg1, "time")) {  
+      monitorPort.print("setting time to: <");
+      monitorPort.print(arg2);
+      monitorPort.println(">");
+      rtcSetTime(arg2);
+    }    
+    else if (0 == strcmp(arg1, "adj")) {  
+      monitorPort.println("adjusting rtc");
+      rtcAdjust();
+    }    
   }
-  
 }
