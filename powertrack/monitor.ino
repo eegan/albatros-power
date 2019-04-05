@@ -26,7 +26,7 @@ void monitor_handle() {
   arg2 = strtok(NULL, " ");
   
   if (0 == strcmp(command, "dmp")) {
-    cfgDumpParameters();
+    cfgDumpFieldValues();
   }
   else if (0 == strcmp(command, "inv")) {
     cfgInvalidateEE();

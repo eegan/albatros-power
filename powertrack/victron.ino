@@ -63,10 +63,11 @@ void initbuffers()
 // Returns true on the call when the packet gets parsed
 bool serviceDatastream()
 {
+
     // while we have data to read
     while(0 != victronData.available()) {
       char c = victronData.read();
-      
+      monitorPort.println("v data");
       // put it in the circular buffer
       circbuf[cbin++] = c;
       if (cbin >= CBLEN) cbin = 0;  // wrap input pointer
