@@ -12,7 +12,7 @@ HardwareSerial &monitorPort = Serial;
 void setup()
 {
   monitorInit();  // do this first so we can print status messages  
-  cfgmanInit();
+  cfgInit();
   lastLoopBegin = millis();
   serviceVictronDatastreamInit();
   // commented out since it re-inits the serial port also used for monitor; TODO implement a flag here

@@ -6,14 +6,6 @@
 
 bool error_flag = false;
 
-/*
- * COMMANDS:
- * -> 'dmp' dump contents of EEPROM
- * -> 'mod field val' modify (in memory) the value of given field (originally from EEPROM)
- * -> 'com' commit local changes to the EEPROM
- * -> 'rtc (unixtime)' no arg: display current time. w/ arg: set current time to that UNIX timestamp.
- */
-
 void monitorInit() {
   monitorPort.begin(9600);
   monitorPort.setTimeout(5000); // 5 seconds
@@ -34,16 +26,16 @@ void monitor_handle() {
   arg2 = strtok(NULL, " ");
   
   if (0 == strcmp(command, "dmp")) {
-    cfgmanDumpParameters();
+    cfgDumpParameters();
   }
   else if (0 == strcmp(command, "inv")) {
-    cfgmanInvalidateEE();
+    cfgInvalidateEE();
   }  
   else if (0 == strcmp(command, "com")) {
-    cfgmanSaveConfig();
+    cfgSaveConfig();
   }
   else if (0 == strcmp(command, "set")) {
-    cfgmanSet(arg1, arg2);
+    cfgSet(arg1, arg2);
   }
   else if (0 == strcmp(command, "rtc")) {
     if (NULL == *arg1) {  // no arguments - display time
@@ -71,7 +63,7 @@ void monitor_handle() {
   }
   else {
       monitorPort.print(
-      "dmp - dump EEPROM fields\n"
+      "dmp - dump all EEPROM fields\n"
       "set index value     - set EEPROM field[index] to value\n"
       "rtc                 - read current RTC setting\n"
       "rtc time hh:mm:ss   - set RTC time (not into hardware)\n"

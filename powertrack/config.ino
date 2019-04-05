@@ -1,13 +1,20 @@
 #include <EEPROM.h>
-//#include <ArduinoSTL.h>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// EEPROM configuration parameters
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Tell it where to store your config data in EEPROM
 #define CONFIG_START 0
 #define FIELDS_START 32
 
-// ID of the settings block
+// ID of the header block
 const UINT16 CONFIG_LEVEL = 1;      // increment for each non-backwards compatible configuration structure upgrade
 const UINT32 FW_VERSION = 0x10000;  // the current firmware version
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// EEPROM header data structure
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool configNew = false;
 const UINT32 MAGIC = 0xABCD1234;
@@ -72,71 +79,67 @@ char *fieldNames[] =
   "VBAT_CUTOFF_MV", "MEASURE_START",  "MEASURE_END", "DAY_START", "DAY_END", "HOURS_RESERVE", "SLOPE"       
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// External functions
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-char *fieldName(int ndx)
-{
-  return fieldNames[ndx];
+// Called from main init function
+void cfgInit() {
+  checkConfig();
 }
 
-long fieldValue(int ndx)
+
+long cfgFieldValue(int ndx)
 {
   return eeprom_fields[ndx].value;
 }
 
-char *fieldValueString(int ndx)
-{
-  static char buf[20];
-  long v = eeprom_fields[ndx].value;
-  switch(eeprom_fields[ndx].type) {
-    case FT_UINT32:
-      ltoa(v, buf, 10);
-      break;
-    case FT_TIME:
-//      int h = v/3600L;
-//      int m = (v%3600L)/60L;
-//      int s = v%60L;
-//      monitorPort.println(h);
-//      monitorPort.println(m);
-//      monitorPort.println(s);
-//      monitorPort.println(v);
-      sprintf(buf, "%02ld:%02ld:%02ld", v/3600L, (v%3600L)/60L, v%60L);
-      break;
-  }
-  return buf;
-}
 
-long parseValue(int ndx, char *str)
-{
-  long v;
-  int h, m, s;
-  switch(eeprom_fields[ndx].type) {
-    case FT_UINT32:
-      v = atol(str);
-      break;
-    case FT_TIME:
-      sscanf(str, "%02d:%02d:%02d", &h, &m, &s);
-      v = h*3600L+m*60L+s;
-//      monitorPort.println(h);
-//      monitorPort.println(m);
-//      monitorPort.println(s);
-//      monitorPort.println(v);
-      break;
-  }
-  return v;
-}
-void cfgmanInit() {
-  cfgmanCheckConfig();
-}
-
-void cfgmanSet(char *indexString, char *valueString) {
+// Set in-memory configuration
+void cfgSet(char *indexString, char *valueString) {
   int index = atoi(indexString);
   long value = parseValue(index, valueString);
   eeprom_fields[index].value = value;
 }
-  
-void cfgmanCheckConfig() {
+
+void cfgInvalidateEE() {
+  EEPROM.write(CONFIG_START+0, 0); // overwrite first MAGIC byte to invalidate EEPROM contents
+}
+
+void cfgSaveConfig() {
+    UINT16 i;
+    for (i=0; i<sizeof cfg; i++)
+      EEPROM.write(CONFIG_START + i, *((char*)&cfg + i));
+    for (i=0; i<sizeof eeprom_fields; i++)
+      EEPROM.write(FIELDS_START + i, *((char*)eeprom_fields + i));
+}
+
+void cfgDumpParameters() {
+  monitorPort.write("magic:    "); monitorPort.println(cfg.validation.magic, 16);
+  monitorPort.write("cfglev:   "); monitorPort.println(cfg.validation.cfg_level, 10);
+  monitorPort.write("new:      "); monitorPort.println(configNew, 10);
+
+  for (int i=0; i<COUNT_OF(eeprom_fields); i++)
+  {
+    char buf[30];
+    sprintf(buf, "%d - %s  =  %s", i, fieldNames[i], fieldValueString(i));
+    monitorPort.println(buf);
+  }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Internal functions - do not call from outside
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// checkConfig
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Load header block from EEPROM and check if configuration is valid
+// If valid, read the rest of the EEPROM
+// If invalid, write hard-coded defaults to the EEPROM
+void checkConfig() {
   // read out the validation sub-struct
   for (UINT16 i=0; i<sizeof cfg.validation; i++)
     ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
@@ -156,43 +159,60 @@ void cfgmanCheckConfig() {
 
     // save everything (using default values from initializers)
     // TODO: this is lazy compared with just writing what we need
-    cfgmanSaveConfig();
+    cfgSaveConfig();
   }
   else {
     // valid configuration - load it
     monitorPort.println("EEPROM valid - loading");
-    cfgmanLoadConfig();
+    loadConfig();
   }
 }
 
-void cfgmanInvalidateEE() {
-  EEPROM.write(CONFIG_START+0, 0); // overwrite first MAGIC byte to invalidate EEPROM contents
-}
-
-void cfgmanLoadConfig() {
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// loadConfig
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Load header block from EEPROM and check if configuration is valid
+void loadConfig() {
+    // load the header block
     for (UINT16 i=sizeof cfg.validation; i<sizeof cfg; i++)
       ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
+     // load the fields array 
     for (UINT16 i=0; i<sizeof eeprom_fields; i++)
       ((byte*) eeprom_fields)[i] = EEPROM.read(FIELDS_START+i);
 }
 
-void cfgmanSaveConfig() {
-    UINT16 i;
-    for (i=0; i<sizeof cfg; i++)
-      EEPROM.write(CONFIG_START + i, *((char*)&cfg + i));
-    for (i=0; i<sizeof eeprom_fields; i++)
-      EEPROM.write(FIELDS_START + i, *((char*)eeprom_fields + i));
+//char *fieldName(int ndx)
+//{
+//  return fieldNames[ndx];
+//}
+
+char *fieldValueString(int ndx)
+{
+  static char buf[20];
+  long v = eeprom_fields[ndx].value;
+  switch(eeprom_fields[ndx].type) {
+    case FT_UINT32:
+      ltoa(v, buf, 10);
+      break;
+    case FT_TIME:
+      sprintf(buf, "%02ld:%02ld:%02ld", v/3600L, (v%3600L)/60L, v%60L);
+      break;
+  }
+  return buf;
 }
 
-void cfgmanDumpParameters() {
-  monitorPort.write("magic:    "); monitorPort.println(cfg.validation.magic, 16);
-  monitorPort.write("cfglev:   "); monitorPort.println(cfg.validation.cfg_level, 10);
-  monitorPort.write("new:      "); monitorPort.println(configNew, 10);
-
-  for (int i=0; i<COUNT_OF(eeprom_fields); i++)
-  {
-    char buf[30];
-    sprintf(buf, "%d - %s  =  %s", i, fieldName(i), fieldValueString(i));
-    monitorPort.println(buf);
+long parseValue(int ndx, char *str)
+{
+  long v;
+  int h=0, m=0, s=0;
+  switch(eeprom_fields[ndx].type) {
+    case FT_UINT32:
+      v = atol(str);
+      break;
+    case FT_TIME:
+      sscanf(str, "%02d:%02d:%02d", &h, &m, &s);
+      v = h*3600L+m*60L+s;
+      break;
   }
+  return v;
 }
