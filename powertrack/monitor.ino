@@ -4,7 +4,6 @@
 #define MAX_ARG_LEN 12 // max characters per arg
 #define MAX_ARG_NUM 3  // max number of args per line
 
-char mon_buf[MAX_BUF_LEN];
 bool error_flag = false;
 
 /*
@@ -22,6 +21,7 @@ void monitorInit() {
 }
 
 void monitor_handle() {
+  char mon_buf[MAX_BUF_LEN];
   char *command, *arg1, *arg2;
   
   mon_buf[monitorPort.readBytesUntil('\r', mon_buf, MAX_BUF_LEN)] = 0;  // read and null-terminate
@@ -33,18 +33,17 @@ void monitor_handle() {
   arg1 = strtok(NULL, " ");
   arg2 = strtok(NULL, " ");
   
-  // TODO: add help if nothing is recognized
   if (0 == strcmp(command, "dmp")) {
-    cfgman_dumpParameters();
+    cfgmanDumpParameters();
   }
-  else if (0 == strcmp(command, "mod")) {
-    // now looking for valid fields
-//    if (strcmp(args[1], "test") == 0 && strcmp(args[2], blank) != 0) {
-//      cfg.test = atol(args[2]);
-//    }
-  }
+  else if (0 == strcmp(command, "inv")) {
+    cfgmanInvalidateEE();
+  }  
   else if (0 == strcmp(command, "com")) {
-    cfgman_saveConfig();
+    cfgmanSaveConfig();
+  }
+  else if (0 == strcmp(command, "set")) {
+    cfgmanSet(arg1, arg2);
   }
   else if (0 == strcmp(command, "rtc")) {
     if (NULL == *arg1) {  // no arguments - display time
@@ -68,6 +67,18 @@ void monitor_handle() {
     else if (0 == strcmp(arg1, "adj")) {  
       monitorPort.println("adjusting rtc");
       rtcAdjust();
-    }    
+    }   
   }
+  else {
+      monitorPort.print(
+      "dmp - dump EEPROM fields\n"
+      "set index value     - set EEPROM field[index] to value\n"
+      "rtc                 - read current RTC setting\n"
+      "rtc time hh:mm:ss   - set RTC time (not into hardware)\n"
+      "rtc date yyyy/mm/dd - set RTC date (not into hardware)\n"
+      "rtc adj             - actually adjust RTC\n"
+      "\n"
+      "\n"
+    );
+  } 
 }
