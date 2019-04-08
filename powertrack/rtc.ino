@@ -58,3 +58,8 @@ void rtcAdjust()
   DateTime t = dt+tm;
   rtc.adjust(dt+tm);
 }
+
+long rtcGetUnix() {
+  DateTime now = rtc.now();
+  return now.unixtime();
+}
