@@ -20,7 +20,6 @@
  *    before powering up the Arduino, so you don't miss anything
  */
 
-#include <SoftwareSerial.h>
 #include "RTClib.h"
 #include <SD.h>
 
