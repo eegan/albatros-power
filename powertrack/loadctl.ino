@@ -1,5 +1,6 @@
 #include "mytypes.h"
 #define loadPin 5 // On/off control for load switch
+//#define loadPin 6 // pretend an LED is the load switch
 
 long time_of_day;
 long loadctl_cooldown = 500; // miliseconds between full runs
@@ -10,22 +11,20 @@ void loadctlInit()
   pinMode(loadPin, OUTPUT);
 }
 
-bool lowVoltageCutoff = false;
-bool dataAgeCutoff = false;
-bool dayTime = false;
+// Conditions that go into determining load status (plus load status)
+bool lowVoltageCutoff = false;  // True if cut off because of low voltage. Hysteresis implemented.
+bool dataAgeCutoff = false;     // True if cut off because of Victron data being too old
+bool dayTime = false;           // True if we are in daytime
 bool loadOn = false;
 
-void loadctlLoop()
+void loadctlLoopHandler()
 {
   // TODO: be sure this works when millis() wraps, I think it's probably OK (EE)
   if (millis() - loadctl_last_run >= loadctl_cooldown) {
     loadctl_last_run = millis();
-
-//    monitorPort.println("Running loadctl loop");
     
     INT32 dayStart = cfg_fieldValue(ndx_dayStart);
     INT32 dayEnd = cfg_fieldValue(ndx_dayEnd);
-    INT32 minrunvolts_mV = cfg_fieldValue(ndx_vbatCutoffMv);
     long maxBatVoltageAge = 1000; // arbitrary value for now
     
     time_of_day = rtcGetTime() % 86400; // 86400 seconds in a day
@@ -37,34 +36,34 @@ void loadctlLoop()
     // If we haven't seen a sample yet, don't make any decision about voltage cutoffs.
     // (The data age cutoff will kick in if we never get a sample.) 
     if (victronSampleSeen()) {
-      bool newLVCutoff = victronGetFieldValue(FI_V) < cfg_fieldValue(ndx_vbatCutoffMv);
-      statuslogCheckChange("LV cutoff", newLVCutoff, lowVoltageCutoff);
+      long bat = victronGetFieldValue(FI_V);
+      bool aboveOffThreshold = bat > cfg_fieldValue(ndx_vbatOffThresholdMv);
+      bool aboveOnThreshold  = bat > cfg_fieldValue(ndx_vbatOnThresholdMv);
+
+      // hysteresis logic
+      bool newLVCutoff = !aboveOffThreshold | !aboveOnThreshold & lowVoltageCutoff;
+      char buf[25];
+      strcpy(buf, "LV cutoff ");
+      ltoa(bat, buf+strlen(buf),  10);
+      statuslogCheckChange(buf, newLVCutoff, lowVoltageCutoff);
     }
+
+    // TODO: test data age by setting it smallish and unplugging the Victron data
+    // TODO: test the daytime code
 
     // See if it's been too long since we got a data packet from the Victron
     bool newDataAgeCutoff = victronGetDataAge() > cfg_fieldValue(ndx_maxVDataAge);
     statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff);
 
     // See if it's daytime
-    bool newDayTime = time_of_day < dayStart || time_of_day >= dayEnd;
+    bool newDayTime = time_of_day > dayStart && time_of_day < dayEnd;
     statuslogCheckChange("daytime", newDayTime, dayTime);
 
-    // See if we're turning 
+    // See if we're turning on (or off)
+    // On unless it's daytime, too old data, or too low battery voltage
     bool newLoadOn = !lowVoltageCutoff & !dataAgeCutoff & !dayTime;
-    statuslogCheckChange("load on/off", newLoadOn, loadOn);
-
-    digitalWrite(loadPin, loadOn); // on during night
+    statuslogCheckChange("load ON", newLoadOn, loadOn);
+    
+    digitalWrite(loadPin, loadOn);
   }
-}
-
-void statuslogCheckChange(char *string, bool newValue, bool &currentValue)
-{
-  // TODO: actually print to log file
-  if (newValue != currentValue) {
-    monitorPort.print("Change in ");
-    monitorPort.print(string);
-    monitorPort.print(", new value is ");
-    monitorPort.println(newValue);
-  }
-  currentValue = newValue;    
 }

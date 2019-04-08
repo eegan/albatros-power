@@ -1,3 +1,6 @@
+// Install RTCLib by Adafruit.
+// Tested against version 1.2.0
+
 #include <RTClib.h>
 
 enum {PRE_INIT, NOT_PRESENT, UNINITIALIZED, INITIALIZED} e_rtcState;
@@ -18,7 +21,7 @@ char *rtcPresentTime()
 {
   static char buf[20] = (__TIME__);
   DateTime now = rtc.now();
-  sprintf(buf,"%d/%d/%d %d:%d:%d", 
+  sprintf(buf,"%04d/%02d/%02d %02d:%02d:%02d", 
     now.year(), now.month(), now.day(),
     now.hour(), now.minute(), now.second() );
   return buf;

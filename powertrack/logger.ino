@@ -1,3 +1,4 @@
+// Tested against SD Card library (built-in) version 1.2.2
 #include <SD.h>
 
 #define SD_CSpin 10 // Chip-select pin for SD
@@ -10,10 +11,12 @@
 
 void loggerInit()
 {
-//  vd_V = vd_I = vd_VPV = vd_PPV = 0;
-//  nSamples = 0;
-//  rtcInit();
   SD.begin(SD_CSpin);
+}
+
+void loggerLoopHandler()
+{
+  
 }
 
 //
@@ -73,9 +76,11 @@ void loggerDumpFile(HardwareSerial &p, char *filename)
     p.println("File not found");
     return;
   }
+
+  // TODO: probably don't need the first while
   while(int n = f.available()) {
-    while(EOF != (c = f.read()))
-      p.write(c);  // TODO: pacing may be required!
+    while( EOF != (c = f.read()) )  // until EOF
+      while (0 == p.write(c));      // keep trying until the character is written (pacing)
   }
 }
 
@@ -94,4 +99,34 @@ void loggerLogEntry()
 //  if (rtc.
   
   File f = SD.open(logFileName);
+}
+
+#define statusLogFilename "status.log"
+
+void statuslogCheckChange(char *string, bool newValue, bool &currentValue)
+{
+  char buf[50];  // should be enough?
+  // TODO: actually print to log file
+  if (newValue != currentValue) {
+    currentValue = newValue;    
+      
+    strcpy(buf, rtcPresentTime());
+    strcat(buf, " ");
+    strcat(buf, string);
+    strcat(buf, " = ");
+    strcat(buf, currentValue? "TRUE" : "FALSE");
+
+    statuslogWriteLine(buf);
+  }
+}
+
+void statuslogWriteLine(char *string)
+{
+  monitorPort.println(string);
+
+  File f = SD.open(statusLogFilename, FILE_WRITE);
+  if (f) {
+    f.println(string);
+    f.close();
+  }  
 }

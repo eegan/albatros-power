@@ -1,3 +1,6 @@
+// Program configuration handler
+// Includes EEPROM support, default values, and accessor function
+
 #include <EEPROM.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +52,8 @@ enum e_ft {
 
 // Index values - to be used by set/get accessors
 enum e_fndx {
-   ndx_vbatCutoffMv
+   ndx_vbatOffThresholdMv
+  ,ndx_vbatOnThresholdMv
   ,ndx_measureStart 
   ,ndx_measureEnd
   ,ndx_dayStart
@@ -76,7 +80,8 @@ struct {
   e_ft type;
   long value;
 } eeprom_fields[] = {
-   {FT_UINT32, 25000L}  // discharge (load) cutoff, 25 volts
+   {FT_UINT32, 25000L}  // discharge (load) turn-off, 25 volts
+  ,{FT_UINT32, 25100L}  // discharge (load) turn-on, 25.1 volts
   ,{FT_TIME, 23*3600L}  // time to start measurement of discharge curve, 2300h
   ,{FT_TIME, 03*3600L}  // time to end measurement of discharge curve, 0300h
   ,{FT_TIME, 06*3600L}  // start of daytime mode (seconds since midnight)
@@ -90,7 +95,8 @@ struct {
 // Field names
 char *fieldNames[] = 
 {
-    "VBAT_CUTOFF_MV"
+    "VBAT_TURNOFF_MV"
+  , "VBAT_TURNON_MV"
   , "MEASURE_START"
   , "MEASURE_END"
   , "DAY_START"
@@ -114,7 +120,7 @@ char *fieldNames[] =
 // cfgInit
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Called from main init function
-void cfg_init() {
+void cfgInit() {
   checkConfig();
 }
 
@@ -204,7 +210,7 @@ void checkConfig() {
   for (UINT16 i=0; i<sizeof cfg.validation; i++)
     ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
 
-  monitorPort.print("Magic number: "); monitorPort.println(cfg.validation.magic);
+//  monitorPort.print("Magic number: "); monitorPort.println(cfg.validation.magic);
   
   // check the magic number and the configuration level
   if (  MAGIC  !=  cfg.validation.magic

@@ -10,7 +10,7 @@ const unsigned long serialTimeoutMs = 5;  // Time after last character received,
 INT32 victronLastSampleTime;
 bool victronSampleReceived = false;
 
-void serviceVictronDatastreamInit()
+void victronInit()
 {
   victronData.begin(19200);  // Victron baud rate
   victronData.setTimeout(0); // this apparently works to set infinite timeout which is what we want
@@ -74,7 +74,7 @@ void initbuffers()
 }
 
 // Returns true on the call when the packet gets parsed
-bool serviceDatastream()
+bool victronLoopHandler()
 {
     // while we have data to read
     while(0 != victronData.available()) {

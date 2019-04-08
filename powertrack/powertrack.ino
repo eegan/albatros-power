@@ -1,11 +1,14 @@
+// Library dependencies:
+// SD library (built-in): tested against v. 1.2.2
+// other built-in libraries (not mentioned)
+// RTCLib by Adafruit: tested against v. 1.2.0
+// ArduinoSTL by Mike Matera v. 1.1.1
+
 #include "mytypes.h"
 
 const long loopInterval = 200;           // main loop pace (interval between runs)
 const long mainLoopSleepTimeMs = 100;    // time to sleep
 long lastLoopBegin;
-
-//typedef unsigned long UINT32;
-//typedef unsigned short UINT16;
 
 HardwareSerial &monitorPort = Serial;
 
@@ -13,9 +16,10 @@ void setup()
 {
   monitorInit();  // do this first so we can print status messages  
   rtcInit();      // do this next so we know what time it is before we depend on this
-  cfg_init();
+  monitorInit2(); // after RTC init
+  cfgInit();
   lastLoopBegin = millis();
-  serviceVictronDatastreamInit();
+  victronInit();
   // commented out since it re-inits the serial port also used for monitor; TODO implement a flag here
   //debugInit();
   loggerInit();
@@ -23,6 +27,16 @@ void setup()
 }
 
 void loop()
+{
+  paceLoop();
+  
+  victronLoopHandler();
+  monitorLoopHandler();
+  loadctlLoopHandler();
+  loggerLoopHandler();
+}
+
+void paceLoop()
 {
   // Pace the main loop
   // TODO: implement sleep
@@ -39,13 +53,7 @@ void loop()
   
   lastLoopBegin = now;
   #endif
-  serviceDatastream();
-  if (monitorPort.available()) {
-    monitor_handle();
-  }
-  loadctlLoop();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Assert support

@@ -5,19 +5,45 @@
 #define MAX_ARG_NUM 3  // max number of args per line
 
 bool error_flag = false;
-
+int inbufpos;
+  
 void monitorInit() {
   monitorPort.begin(9600);
-  monitorPort.setTimeout(5000); // 5 seconds
-  monitorPort.println("ALBATROS power system serial monitor v 1.0");
+  monitorPort.setTimeout(10000); // 5 seconds
 }
 
-void monitor_handle() {
+void monitorInit2() {
+  statuslogWriteLine("ALBATROS power system serial monitor v 1.0");
+  statuslogWriteLine(rtcPresentTime());
+  inbufpos = 0;
+}
+
+void monitorLoopHandler() {
   char mon_buf[MAX_BUF_LEN];
   char *command, *arg1, *arg2;
+  char c;
   
-  mon_buf[monitorPort.readBytesUntil('\r', mon_buf, MAX_BUF_LEN)] = 0;  // read and null-terminate
+  while (EOF != (c = monitorPort.read())) {
+    mon_buf[inbufpos++] = c;
+    if (inbufpos >= sizeof mon_buf) {
+      // this shouldn't happen
+      monitorPort.println("Line too long.");
+      inbufpos = 0;
+    }
+  }
 
+  // no fixing up needed, if there's nothing in the buffer
+  if (0 == inbufpos)
+    return;
+
+  // If the last character was CR, we're done; replace it with null
+  // Else quit and come back later
+  if ('\r' == mon_buf[inbufpos-1])
+    mon_buf[inbufpos-1] = 0;
+  else
+    return;
+
+  // show what was received as a command line
   monitorPort.print(">");
   monitorPort.print(mon_buf);
   monitorPort.println("<");
@@ -26,6 +52,7 @@ void monitor_handle() {
   command = strtok(mon_buf, " ");
   arg1 = strtok(NULL, " ");
   arg2 = strtok(NULL, " ");
+  inbufpos = 0;
   
   if (0 == strcmp(command, "def")) {
     cfgDumpFieldValues(monitorPort);
