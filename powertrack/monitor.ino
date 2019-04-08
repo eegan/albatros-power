@@ -29,13 +29,13 @@ void monitor_handle() {
     cfgDumpFieldValues();
   }
   else if (0 == strcmp(command, "inv")) {
-    cfgInvalidateEE();
+    cfg_invalidateEE();
   }  
   else if (0 == strcmp(command, "com")) {
-    cfgSaveConfig();
+    cfg_saveConfig();
   }
   else if (0 == strcmp(command, "set")) {
-    cfgSet(arg1, arg2);
+    cfg_set(arg1, arg2);
   }
   else if (0 == strcmp(command, "rtc")) {
     if (NULL == *arg1) {  // no arguments - display time

@@ -66,8 +66,8 @@ struct {
    {FT_UINT32, 25000L}  // 25 volts
   ,{FT_TIME, 23*3600L}  // 2300h
   ,{FT_TIME, 03*3600L}  // 0300h
-  ,{FT_TIME, 06*3600L}  // start of daytime mode
-  ,{FT_TIME, 18*3600L}  // end of daytime mode
+  ,{FT_TIME, 06*3600L}  // start of daytime mode (seconds since midnight)
+  ,{FT_TIME, 18*3600L}  // end of daytime mode   (seconds since midnight)
   ,{FT_UINT32, 48L}     // minimum calculated hours of reserve to run during the day
   ,{FT_UINT32, 36360L}  // uV / hour nominal discharge rate (220Ah, 50% discharge, 2V span, 2A load)
   
@@ -89,7 +89,7 @@ char *fieldNames[] =
 // cfgInit
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Called from main init function
-void cfgInit() {
+void cfg_init() {
   checkConfig();
 }
 
@@ -98,7 +98,7 @@ void cfgInit() {
 // cfgFieldValue
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Return field value given an index
-long cfgFieldValue(int ndx)
+long cfg_fieldValue(int ndx)
 {
   return eeprom_fields[ndx].value;
 }
@@ -109,10 +109,10 @@ long cfgFieldValue(int ndx)
 // set in-memory value given string versions of index and value
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Set in-memory configuration
-void cfgSet(char *indexString, char *valueString) {
+void cfg_set(char *indexString, char *valueString) {
   int index = atoi(indexString);
   long value = parseValue(index, valueString);
-  cfgSet(index, value);
+  cfg_set(index, value);
 }
 
 
@@ -121,7 +121,7 @@ void cfgSet(char *indexString, char *valueString) {
 // set in-memory value given index and string
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Set in-memory configuration
-void cfgSet(int index, long value) {
+void cfg_set(int index, long value) {
   eeprom_fields[index].value = value;
 }
 
@@ -130,7 +130,7 @@ void cfgSet(int index, long value) {
 // Invalidate EEPROM header, so it loads defaults on the next restart
 // Used for testing, or for reinitializing in actual operation
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void cfgInvalidateEE() {
+void cfg_invalidateEE() {
   EEPROM.write(CONFIG_START+0, 0); // overwrite first MAGIC byte to invalidate EEPROM contents
 }
 
@@ -138,7 +138,7 @@ void cfgInvalidateEE() {
 // cfgSaveConfig
 // save configuration from memory to EEPROM
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void cfgSaveConfig() {
+void cfg_saveConfig() {
     UINT16 i;
     for (i=0; i<sizeof cfg; i++)
       EEPROM.write(CONFIG_START + i, *((char*)&cfg + i));
@@ -194,7 +194,7 @@ void checkConfig() {
 
     // save everything (using default values from initializers)
     // TODO: this is lazy compared with just writing what we need
-    cfgSaveConfig();
+    cfg_saveConfig();
   }
   else {
     // valid configuration - load it
