@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Victron VE.DIRECT serial data stream parsing
 /////////////////////////////////////////////////////////////////////////////////////
-
-HardwareSerial &victronData = Serial1; // Serial port used to receive Victron data. On Arduino Mega 2560, this can point to Serial1, 2, or 3; on others, to Serial
-unsigned long lastCharRxMs;           // millisecond timestamp when last increment of available bytes was detected
+#define DEBUG_VICTRON 0
+HardwareSerial &victronData = Serial2; // Serial port used to receive Victron data. On Arduino Mega 2560, this can point to Serial1, 2, or 3; on others, to Serial
+unsigned long lastCharRxMs;           // millisecond timestamp when last increment of cb_available bytes was detected
 unsigned short lastCharCount;         // Tracks fullness of serial buffer
 const unsigned long serialTimeoutMs = 5;  // Time after last character received, to declare the packet received and parse it
 
@@ -25,14 +25,24 @@ const int CBRETAIN = 5; // length of string + 1 for the actual checksum
 char circbuf[CBLEN];
 
 UINT16 cbin, cbout;
+void cb_insert(char c)
+{
+      // put it in the circular buffer
+      circbuf[cbin++] = c;
+      if (cbin >= CBLEN) cbin = 0;  // wrap input pointer
+      if (cbout == cbin) {
+        cbout++;   // if buffer overflowed, drop the oldest character by bumping output pointer
+        if (cbout >= CBLEN) cbout = 0;  // wrap output pointer
+      }
+}
 
-char nextchar() {
+char cb_nextchar() {
   char c = circbuf[cbout++];  
   if (cbout >= CBLEN) cbout = 0;
   return c;
 }
 
-int available() {
+int cb_available() {
   int count = cbin - cbout;
   if (count < 0) count += CBLEN;
   return count;
@@ -63,18 +73,10 @@ void initbuffers()
 // Returns true on the call when the packet gets parsed
 bool serviceDatastream()
 {
-
     // while we have data to read
     while(0 != victronData.available()) {
       char c = victronData.read();
-      monitorPort.println("v data");
-      // put it in the circular buffer
-      circbuf[cbin++] = c;
-      if (cbin >= CBLEN) cbin = 0;  // wrap input pointer
-      if (cbout == cbin) {
-        cbout++;   // if buffer overflowed, drop the oldest character by bumping output pointer
-        if (cbout >= CBLEN) cbout = 0;  // wrap output pointer
-      }
+      cb_insert(c);
 
       // check whether lookback buffer is full, if so, make room, copying CBRETAIN bytes back to start
       if (lbin == LBBLEN) {
@@ -93,9 +95,6 @@ bool serviceDatastream()
     }    
 }
 
-// Buffer for reading elements (field tag and field value)
-const int BUFLEN = 20;
-char buf[BUFLEN];
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Parser
@@ -106,35 +105,19 @@ struct fd {
   char *tag;  // the string we expect to see from the Victron
   byte index; // an index into the result array
   byte type;  // Type enumeration  so we know what to expect and how to treat it 
+  long value; // we will store the value in the array, once it's parsed, except for strings
 };
 
 // Field type enumerations
-const byte FT_int =     1;  // mV, mA, W or 0.01kWh
-const byte FT_ON_OFF =  2;  // "OFF" / "ON" in string, --> 0 / 1
-const byte FT_bool =    3;  // 0 or 1
-const byte FT_string =  4;
-const byte FT_checksum = 5; // single byte, could be anything, special treatment
+enum {FT_int, FT_ON_OFF, FT_bool, FT_string, FT_checksum};
 
-const byte FI_V     = 0;
-const byte FI_VPV   = 1;
-const byte FI_PPV   = 2;
-const byte FI_I     = 3;
-const byte FI_IL    = 4;
-const byte FI_ILOAD = 5;
-const byte FI_Relay = 6;
-const byte FI_H19   = 7;
-const byte FI_H20   = 8;
-const byte FI_H21   = 9;
-const byte FI_H22   = 10;
-const byte FI_H23   = 11;
-const byte FI_ERR   = 12;
-const byte FI_CS    = 13;
-const byte FI_FW    = 14;
-const byte FI_PID   = 15;
-const byte FI_SER   = 16;
-const byte FI_HSDS  = 17;
-const byte FI_MPPT  = 18;
-const byte FI_Checksum = 19;
+// Field index enumerations
+enum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL, 
+      FI_ILOAD, FI_Relay, FI_H19,   FI_H20, FI_H21, 
+      FI_H22,   FI_H23,   FI_ERR,   FI_CS,  FI_FW, 
+      FI_PID, FI_SER, FI_HSDS, FI_MPPT, FI_Checksum,
+      FI_field_count
+};
 
 struct fd fieldDescriptors[] = {
    {"V",      FI_V,     FT_int}   // main battery voltage (mV)
@@ -165,6 +148,10 @@ struct fd fieldDescriptors[] = {
 // TODO: 
 // Deal with any asserts that need coding to recover from e.g. a serial data error
 
+// Buffer for reading elements (field tag and field value)
+const int BUFLEN = 20;
+char buf[BUFLEN];
+
 void ParsePacket()
 {
 
@@ -175,15 +162,15 @@ void ParsePacket()
 
   // read until we see 'P' for PID field; there shouldn't be any in any hex data in between packets
   while (circbuf[cbout] != 'P')
-    nextchar();
+    cb_nextchar();
 
   // initialize checksum to what came right before the 'P' we scanned for
   char checksum = '\r' + '\n';
   
   // For each field
-  while (available()) {
+  while (cb_available()) {
     
-    //debug.print("available: "); debug.println(available());    
+    //debug.print("cb_available: "); debug.println(cb_available());    
     
     // read the field label into buffer
     readElement(checksum, '\t');
@@ -207,23 +194,24 @@ void ParsePacket()
 
     // Checksum and discard the linefeed between fields (if it's there). It should be 
     // there, unless we're at the last (checksum) field
-    if (available()) {
-      char c = nextchar();
+    if (cb_available()) {
+      char c = cb_nextchar();
       ASSERT('\n' == c)
       checksum += c; // should be '\n'
     }
 
-    long value;
+    long value = 0;
     
     switch(fieldType) {
       case FT_int:
       case FT_bool:
         value = atol(buf);
-        logger_accumulateSample(fieldIndex, value);
         
+        #if DEBUG_VICTRON
         debug.print(fieldDescriptors[fieldIndex].tag);
         debug.print("=");
         debug.println(value);
+        #endif
         
         // TODO: something with value
         break;
@@ -232,22 +220,23 @@ void ParsePacket()
         break;
       case FT_checksum:
         ASSERT(0 == checksum);
+        #if DEBUG_VICTRON
         debug.print("Checksum: "); debug.println((int)checksum);
-        if (0 == checksum) {
-          logger_finalizeSample();
-        }
-        else
-          loggerInit();
-        
-        // do something with this information
+        #endif
+        value = checksum;
+        victronUpdateNotify();
         break;
       case FT_string:
+        #if DEBUG_VICTRON
         debug.print(fieldDescriptors[fieldIndex].tag);
         debug.print("=");
-        debug.println(buf);
+        debug.println(value);
+        #endif;
+        break;
       default:
         ASSERT(0);
     }
+    fieldDescriptors[fieldIndex].value = value;
   }
 
  // TODO: check if checksum = 0, or just store it    
@@ -257,12 +246,12 @@ void ParsePacket()
 void readElement(char &checksum, char terminator) {
 
   // Prevent buffer overrun (use BUFLEN, leaving room for terminal null)
-  // Only expect up to amount that was available in packet (nchars): The last field won't 
+  // Only expect up to amount that was cb_available in packet (nchars): The last field won't 
   // terminate in \r\n, since this is at the start of the next packet
-  int maxToRead = min(BUFLEN, available());
+  int maxToRead = min(BUFLEN, cb_available());
   int ellen;  // element length
   for (ellen = 0; ellen < maxToRead; ellen++) {
-    buf[ellen] = nextchar();
+    buf[ellen] = cb_nextchar();
     checksum += buf[ellen];
     if (buf[ellen] == terminator)
       break;
@@ -279,4 +268,20 @@ void readElement(char &checksum, char terminator) {
   // and we'll check the checksum later
 
   if (ellen <= BUFLEN) buf[ellen] = '\0';  
+}
+
+void victronDumpStatus(HardwareSerial &p)
+{
+  for (int i=0; i<FI_field_count; i++) {
+    if (fieldDescriptors[i].type != FT_string) {
+      p.print(fieldDescriptors[i].tag);
+      p.print(" = ");
+      p.println(fieldDescriptors[i].value);
+    }
+  }
+}
+void victronUpdateNotify()
+{
+  //TODO: notify other modules
+  loggerNotifyVictronSample();
 }

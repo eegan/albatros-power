@@ -18,15 +18,17 @@ void monitor_handle() {
   
   mon_buf[monitorPort.readBytesUntil('\r', mon_buf, MAX_BUF_LEN)] = 0;  // read and null-terminate
 
-  //monitorPort.print(mon_buf); // when using the stereo jack you don't see what you typed. Here it is.
-
+  monitorPort.print(">");
+  monitorPort.print(mon_buf);
+  monitorPort.println("<");
+    
   // parse the line into ' ' separated arguments
   command = strtok(mon_buf, " ");
   arg1 = strtok(NULL, " ");
   arg2 = strtok(NULL, " ");
   
-  if (0 == strcmp(command, "dmp")) {
-    cfgDumpFieldValues();
+  if (0 == strcmp(command, "def")) {
+    cfgDumpFieldValues(monitorPort);
   }
   else if (0 == strcmp(command, "inv")) {
     cfg_invalidateEE();
@@ -39,7 +41,6 @@ void monitor_handle() {
   }
   else if (0 == strcmp(command, "rtc")) {
     if (NULL == *arg1) {  // no arguments - display time
-    
       //present = rtc.now().unixtime();   // I really think we will want YYYY/MM/DD HH:MM:SS
       monitorPort.print("current time: ");
       monitorPort.println(rtcPresentTime());
@@ -59,17 +60,23 @@ void monitor_handle() {
     else if (0 == strcmp(arg1, "adj")) {  
       monitorPort.println("adjusting rtc");
       rtcAdjust();
-    }   
+    }
   }
+  else if (0 == strcmp(command, "vs")) {  
+    monitorPort.println("Victron status:");
+    victronDumpStatus(monitorPort);
+  }  
   else {
       monitorPort.print(
-      "dmp - dump all EEPROM fields\n"
+      "def - dump EEPROM fields\n"
+      "inv - invalidate EEPROM (use to reinitialize or to test init code)\n"
+      "com - commit: save in-memory fields to EEPROM\n"
       "set index value     - set EEPROM field[index] to value\n"
       "rtc                 - read current RTC setting\n"
       "rtc time hh:mm:ss   - set RTC time (not into hardware)\n"
       "rtc date yyyy/mm/dd - set RTC date (not into hardware)\n"
       "rtc adj             - actually adjust RTC\n"
-      "\n"
+      "vs  - Victron status, print out current Victron parameters\n"
       "\n"
     );
   } 

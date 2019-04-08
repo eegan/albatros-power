@@ -150,16 +150,16 @@ void cfg_saveConfig() {
 // cfgDumpFieldValues
 // print out all field values with indexes
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void cfgDumpFieldValues() {
-  monitorPort.write("magic:    "); monitorPort.println(cfg.validation.magic, 16);
-  monitorPort.write("cfglev:   "); monitorPort.println(cfg.validation.cfg_level, 10);
-  monitorPort.write("new:      "); monitorPort.println(configNew, 10);
+void cfgDumpFieldValues(HardwareSerial &p) {
+  p.write("magic:    "); p.println(cfg.validation.magic, 16);
+  p.write("cfglev:   "); p.println(cfg.validation.cfg_level, 10);
+  p.write("new:      "); p.println(configNew, 10);
 
   for (int i=0; i<COUNT_OF(eeprom_fields); i++)
   {
     char buf[30];
     sprintf(buf, "%d - %s  =  %s", i, fieldNames[i], fieldValueString(i));
-    monitorPort.println(buf);
+    p.println(buf);
   }
 }
 
