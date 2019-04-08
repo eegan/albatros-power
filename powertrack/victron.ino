@@ -7,6 +7,9 @@ unsigned long lastCharRxMs;           // millisecond timestamp when last increme
 unsigned short lastCharCount;         // Tracks fullness of serial buffer
 const unsigned long serialTimeoutMs = 5;  // Time after last character received, to declare the packet received and parse it
 
+INT32 victronLastSampleTime;
+bool victronSampleReceived = false;
+
 void serviceVictronDatastreamInit()
 {
   victronData.begin(19200);  // Victron baud rate
@@ -112,12 +115,20 @@ struct fd {
 enum {FT_int, FT_ON_OFF, FT_bool, FT_string, FT_checksum};
 
 // Field index enumerations
-enum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL, 
-      FI_ILOAD, FI_Relay, FI_H19,   FI_H20, FI_H21, 
-      FI_H22,   FI_H23,   FI_ERR,   FI_CS,  FI_FW, 
-      FI_PID, FI_SER, FI_HSDS, FI_MPPT, FI_Checksum,
-      FI_field_count
-};
+//enum fubar {FI_V};
+
+
+// Arduino is broken
+// This enum declaration works (into a global scope) if it is in config.ino, but not if they are here
+// Please maintain them in both places, until we figure out what to do.
+// TODO: Perhaps put them in a .h file
+
+//enum victronFieldEnum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL, 
+//      FI_ILOAD, FI_Relay, FI_H19,   FI_H20, FI_H21, 
+//      FI_H22,   FI_H23,   FI_ERR,   FI_CS,  FI_FW, 
+//      FI_PID, FI_SER, FI_HSDS, FI_MPPT, FI_Checksum,
+//      FI_field_count
+//};
 
 struct fd fieldDescriptors[] = {
    {"V",      FI_V,     FT_int}   // main battery voltage (mV)
@@ -224,6 +235,8 @@ void ParsePacket()
         debug.print("Checksum: "); debug.println((int)checksum);
         #endif
         value = checksum;
+        victronSampleReceived = true; // flag that we've seen a packet (ever)
+        victronLastSampleTime = rtcGetTime();
         victronUpdateNotify();
         break;
       case FT_string:
@@ -270,6 +283,7 @@ void readElement(char &checksum, char terminator) {
   if (ellen <= BUFLEN) buf[ellen] = '\0';  
 }
 
+// TODO: add string fields (they have to also be stored ...)
 void victronDumpStatus(HardwareSerial &p)
 {
   for (int i=0; i<FI_field_count; i++) {
@@ -284,4 +298,20 @@ void victronUpdateNotify()
 {
   //TODO: notify other modules
   loggerNotifyVictronSample();
+}
+
+long victronGetDataAge()
+{
+  return rtcGetTime() - victronLastSampleTime;
+}
+
+bool victronSampleSeen()
+{
+  return victronSampleReceived;
+}
+
+// parameter should be type victronFieldEnum, but arduino won't let me
+long victronGetFieldValue(int field)
+{
+  return fieldDescriptors[field].value;
 }

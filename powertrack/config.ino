@@ -49,13 +49,26 @@ enum e_ft {
 
 // Index values - to be used by set/get accessors
 enum e_fndx {
-  ndx_vbatCutoffMv, 
-  ndx_measureStart, 
-  ndx_measureEnd,
-  ndx_dayStart,
-  ndx_dayEnd,
-  ndx_hoursReserve,
-  ndx_slope 
+   ndx_vbatCutoffMv
+  ,ndx_measureStart 
+  ,ndx_measureEnd
+  ,ndx_dayStart
+  ,ndx_dayEnd
+  ,ndx_hoursReserve
+  ,ndx_slope 
+  ,ndx_secsPerLog
+  ,ndx_maxVDataAge
+};
+
+// Arduino is broken
+// This enum declaration works (into a global scope) if it is here, but not if they are in victron.ino.
+// Please maintain them in both places, until we figure out what to do.
+// TODO: perhaps put them in a .h file
+enum victronFieldEnum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL, 
+      FI_ILOAD, FI_Relay, FI_H19,   FI_H20, FI_H21, 
+      FI_H22,   FI_H23,   FI_ERR,   FI_CS,  FI_FW, 
+      FI_PID, FI_SER, FI_HSDS, FI_MPPT, FI_Checksum,
+      FI_field_count
 };
 
 // The in-memory copy of the fields, with type tags
@@ -63,22 +76,34 @@ struct {
   e_ft type;
   long value;
 } eeprom_fields[] = {
-   {FT_UINT32, 25000L}  // 25 volts
-  ,{FT_TIME, 23*3600L}  // 2300h
-  ,{FT_TIME, 03*3600L}  // 0300h
+   {FT_UINT32, 25000L}  // discharge (load) cutoff, 25 volts
+  ,{FT_TIME, 23*3600L}  // time to start measurement of discharge curve, 2300h
+  ,{FT_TIME, 03*3600L}  // time to end measurement of discharge curve, 0300h
   ,{FT_TIME, 06*3600L}  // start of daytime mode (seconds since midnight)
   ,{FT_TIME, 18*3600L}  // end of daytime mode   (seconds since midnight)
   ,{FT_UINT32, 48L}     // minimum calculated hours of reserve to run during the day
   ,{FT_UINT32, 36360L}  // uV / hour nominal discharge rate (220Ah, 50% discharge, 2V span, 2A load)
-  
+  ,{FT_UINT32, 10}      // seconds between log entries
+  ,{FT_UINT32, 10000}   // maximum seconds between victron data packets, before load turned off
 };
 
-// The names of the fields
+// Field names
 char *fieldNames[] = 
 {
-  "VBAT_CUTOFF_MV", "MEASURE_START",  "MEASURE_END", "DAY_START", "DAY_END", "HOURS_RESERVE", "SLOPE"       
+    "VBAT_CUTOFF_MV"
+  , "MEASURE_START"
+  , "MEASURE_END"
+  , "DAY_START"
+  , "DAY_END"
+  , "HOURS_RESERVE"
+  , "SLOPE"
+  , "SECS_PER_LOG"
+  , "MAX_VIC_DATA_AGE"
 };
 
+// TODO: include a field count in the header struct, 
+// and initialze fields beyond the current EEPROM field count value, to defaults
+// This allows an upgrade which adds fields but preserves previously defined values
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // External functions

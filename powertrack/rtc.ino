@@ -50,7 +50,7 @@ void rtcAdjust()
   rtc.adjust(dt+tm);
 }
 
-long rtcGetUnix() {
+long rtcGetTime() {
   DateTime now = rtc.now();
   return now.unixtime();
 }

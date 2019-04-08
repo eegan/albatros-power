@@ -31,9 +31,10 @@ void loggerInit()
 //  loggerInit();
 //}
 
+// receive notification of a new Victron sample
 void loggerNotifyVictronSample()
 {
-  
+  // go read it
 }
 
 
@@ -81,4 +82,16 @@ void loggerDumpFile(HardwareSerial &p, char *filename)
 void loggerEraseFile (HardwareSerial &p, char *filename)
 {
   SD.remove(filename);
+}
+
+
+static UINT32 currentFilenameDay = 0;
+char logFileName[13]; // 8.3 + null
+void loggerLogEntry() 
+{
+
+  // Eamon was here
+//  if (rtc.
+  
+  File f = SD.open(logFileName);
 }
