@@ -65,19 +65,34 @@ void monitor_handle() {
   else if (0 == strcmp(command, "vs")) {  
     monitorPort.println("Victron status:");
     victronDumpStatus(monitorPort);
+  }    
+  else if (0 == strcmp(command, "ls")) {  
+    monitorPort.println("SD card root files:");
+    loggerRootDir(monitorPort);
+  }    
+  else if (0 == strcmp(command, "dmp")) {  
+    monitorPort.println(arg1);
+    loggerDumpFile(monitorPort, arg1);
   }  
+  else if (0 == strcmp(command, "era")) {  
+    monitorPort.println(arg1);
+    loggerEraseFile(monitorPort, arg1);
+  }  
+  
   else {
       monitorPort.print(
-      "def - dump EEPROM fields\n"
-      "inv - invalidate EEPROM (use to reinitialize or to test init code)\n"
-      "com - commit: save in-memory fields to EEPROM\n"
-      "set index value     - set EEPROM field[index] to value\n"
-      "rtc                 - read current RTC setting\n"
-      "rtc time hh:mm:ss   - set RTC time (not into hardware)\n"
-      "rtc date yyyy/mm/dd - set RTC date (not into hardware)\n"
-      "rtc adj             - actually adjust RTC\n"
-      "vs  - Victron status, print out current Victron parameters\n"
-      "\n"
+      "def                  - dump EEPROM fields\n"
+      "inv                  - invalidate EEPROM (use to reinitialize or to test init code)\n"
+      "com                  - commit: save in-memory fields to EEPROM\n"
+      "set index value      - set EEPROM field[index] to value\n"
+      "rtc                  - read current RTC setting\n"
+      "rtc time hh:mm:ss    - set RTC time (not into hardware)\n"
+      "rtc date yyyy/mm/dd  - set RTC date (not into hardware)\n"
+      "rtc adj              - actually adjust RTC\n"
+      "vs                   - Victron status, print out current Victron parameters\n"
+      "ls                   - list SD card root files\n"
+      "dmp filename         - dump contents of specified file\n"
+      "era filename         - erase specified file\n"
     );
   } 
 }
