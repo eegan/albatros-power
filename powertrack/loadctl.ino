@@ -2,6 +2,8 @@
 #define loadPin 5 // On/off control for load switch
 //#define loadPin 6 // pretend an LED is the load switch
 
+#define DAY_SECONDS 86400
+
 long time_of_day;
 long loadctl_cooldown = 500; // miliseconds between full runs
 long loadctl_last_run = 0; // last time this loop ran
@@ -27,7 +29,7 @@ void loadctlLoopHandler()
     INT32 dayEnd = cfg_fieldValue(ndx_dayEnd);
     long maxBatVoltageAge = 1000; // arbitrary value for now
     
-    time_of_day = rtcGetTime() % 86400; // 86400 seconds in a day
+    time_of_day = rtcGetTime() % DAY_SECONDS;
 
     // TODO: is there anything to do, if this is not the case?
     ASSERT(dayStart < dayEnd); // expressed in seconds since midnight, this should always be true
@@ -56,7 +58,15 @@ void loadctlLoopHandler()
     statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff);
 
     // See if it's daytime
-    bool newDayTime = time_of_day > dayStart && time_of_day < dayEnd;
+	long dayLength = dayEnd - dayStart; 
+	if (dayLength < 0) dayLength += DAY_SECONDS;
+    
+	long timeAfterDayStart = time_of_day - dayStart; 
+	if (timeAfterDayStart < 0) timeAfterDayStart += DAY_SECONDS;
+	
+//    bool newDayTime = time_of_day > dayStart && time_of_day < dayEnd;
+    bool newDayTime = timeAfterDayStart < dayLength;
+	
     statuslogCheckChange("daytime", newDayTime, dayTime);
 
     // See if we're turning on (or off)
