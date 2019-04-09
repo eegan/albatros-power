@@ -1,3 +1,4 @@
+#include "powertrack.h"
 #include <EEPROM.h>
 
 #define MAX_BUF_LEN 30 // max number of bytes in a command
@@ -13,8 +14,9 @@ void monitorInit() {
 }
 
 void monitorInit2() {
-  statuslogWriteLine("ALBATROS power system serial monitor v 1.0");
+  statuslogWriteLine("ALBATROS power system v 1.0");
   statuslogWriteLine(rtcPresentTime());
+  monitorPort.println("serial monitor");
   inbufpos = 0;
 }
 
@@ -105,13 +107,18 @@ void monitorLoopHandler() {
     monitorPort.println(arg1);
     loggerEraseFile(monitorPort, arg1);
   }  
+  else if (0 == strcmp(command, "test")) {  
+    monitorPort.println(arg1);
+    loggerLogEntry();
+    monitorPort.println("Called log entry");
+  }  
   
   else {
       monitorPort.print(
       "def                  - dump EEPROM fields\n"
       "inv                  - invalidate EEPROM (use to reinitialize or to test init code)\n"
-      "com                  - commit: save in-memory fields to EEPROM\n"
-      "set index value      - set EEPROM field[index] to value\n"
+      "com                  - commit: save in-memory config fields to EEPROM\n"
+      "set index value      - set config field[index] to value (in memory)\n"
       "rtc                  - read current RTC setting\n"
       "rtc time hh:mm:ss    - set RTC time (not into hardware)\n"
       "rtc date yyyy/mm/dd  - set RTC date (not into hardware)\n"

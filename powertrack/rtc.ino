@@ -1,6 +1,7 @@
+#include "powertrack.h"
+
 // Install RTCLib by Adafruit.
 // Tested against version 1.2.0
-
 #include <RTClib.h>
 
 enum {PRE_INIT, NOT_PRESENT, UNINITIALIZED, INITIALIZED} e_rtcState;
@@ -17,10 +18,39 @@ void rtcInit()
   e_rtcState = rtc.initialized() ? INITIALIZED : UNINITIALIZED;
 }
 
+DateTime now;
+void rtcReadTime() {
+  now = rtc.now();
+}
+
+int rtcYear() {
+  return now.year();
+}
+
+int rtcMonth() {
+  return now.month();
+}
+
+int rtcDay() {
+  return now.day();
+}
+
+int rtcHour() {
+  return now.hour();
+}
+
+int rtcMinute() {
+  return now.minute();
+}
+
+int rtcSecond() {
+  return now.second();
+}
+
 char *rtcPresentTime()
 {
   static char buf[20] = (__TIME__);
-  DateTime now = rtc.now();
+  rtcReadTime();
   sprintf(buf,"%04d/%02d/%02d %02d:%02d:%02d", 
     now.year(), now.month(), now.day(),
     now.hour(), now.minute(), now.second() );
@@ -54,6 +84,6 @@ void rtcAdjust()
 }
 
 long rtcGetTime() {
-  DateTime now = rtc.now();
+  rtcReadTime();
   return now.unixtime();
 }

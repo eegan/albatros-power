@@ -1,6 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Victron VE.DIRECT serial data stream parsing
 /////////////////////////////////////////////////////////////////////////////////////
+#include "powertrack.h"
+
 #define DEBUG_VICTRON 0
 HardwareSerial &victronData = Serial2; // Serial port used to receive Victron data. On Arduino Mega 2560, this can point to Serial1, 2, or 3; on others, to Serial
 unsigned long lastCharRxMs;           // millisecond timestamp when last increment of cb_available bytes was detected

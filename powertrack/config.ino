@@ -1,6 +1,6 @@
 // Program configuration handler
 // Includes EEPROM support, default values, and accessor function
-
+#include "powertrack.h"
 #include <EEPROM.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,7 @@ struct {
   ,{FT_TIME, 18*3600L}  // end of daytime mode   (seconds since midnight)
   ,{FT_UINT32, 48L}     // minimum calculated hours of reserve to run during the day
   ,{FT_UINT32, 36360L}  // uV / hour nominal discharge rate (220Ah, 50% discharge, 2V span, 2A load)
-  ,{FT_UINT32, 10}      // seconds between log entries
+  ,{FT_UINT32, 60}      // seconds between log entries
   ,{FT_UINT32, 10000}   // maximum seconds between victron data packets, before load turned off
 };
 
@@ -102,7 +102,7 @@ char *fieldNames[] =
   , "DAY_START"
   , "DAY_END"
   , "HOURS_RESERVE"
-  , "SLOPE"
+  , "SLOPE_UV_PER_HOUR"
   , "SECS_PER_LOG"
   , "MAX_VIC_DATA_AGE"
 };
@@ -141,9 +141,11 @@ long cfg_fieldValue(int ndx)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Set in-memory configuration
 void cfg_set(char *indexString, char *valueString) {
-  int index = atoi(indexString);
-  long value = parseValue(index, valueString);
-  cfg_set(index, value);
+  if (isdigit(*indexString) && isdigit(*valueString)) {
+    int index = atoi(indexString);
+    long value = parseValue(index, valueString);
+    cfg_set(index, value);
+  }
 }
 
 
@@ -182,9 +184,9 @@ void cfg_saveConfig() {
 // print out all field values with indexes
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void cfgDumpFieldValues(HardwareSerial &p) {
-  p.write("magic:    "); p.println(cfg.validation.magic, 16);
-  p.write("cfglev:   "); p.println(cfg.validation.cfg_level, 10);
-  p.write("new:      "); p.println(configNew, 10);
+  // p.write("magic:    "); p.println(cfg.validation.magic, 16);
+  p.write("Configuration level:   "); p.println(cfg.validation.cfg_level, 10);
+  p.write("Newly initialized:     "); p.println(configNew, 10);
 
   for (int i=0; i<COUNT_OF(eeprom_fields); i++)
   {

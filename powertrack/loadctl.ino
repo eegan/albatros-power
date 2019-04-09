@@ -1,8 +1,4 @@
-#include "mytypes.h"
-#define loadPin 5 // On/off control for load switch
-//#define loadPin 6 // pretend an LED is the load switch
-
-#define DAY_SECONDS 86400
+#include "powertrack.h"
 
 long time_of_day;
 long loadctl_cooldown = 500; // miliseconds between full runs
@@ -30,9 +26,6 @@ void loadctlLoopHandler()
     long maxBatVoltageAge = 1000; // arbitrary value for now
     
     time_of_day = rtcGetTime() % DAY_SECONDS;
-
-    // TODO: is there anything to do, if this is not the case?
-    ASSERT(dayStart < dayEnd); // expressed in seconds since midnight, this should always be true
 
     // See if the voltage is too low.
     // If we haven't seen a sample yet, don't make any decision about voltage cutoffs.
@@ -63,9 +56,7 @@ void loadctlLoopHandler()
     
 	long timeAfterDayStart = time_of_day - dayStart; 
 	if (timeAfterDayStart < 0) timeAfterDayStart += DAY_SECONDS;
-	
-//    bool newDayTime = time_of_day > dayStart && time_of_day < dayEnd;
-    bool newDayTime = timeAfterDayStart < dayLength;
+	  bool newDayTime = timeAfterDayStart < dayLength;
 	
     statuslogCheckChange("daytime", newDayTime, dayTime);
 
@@ -74,6 +65,9 @@ void loadctlLoopHandler()
     bool newLoadOn = !lowVoltageCutoff & !dataAgeCutoff & !dayTime;
     statuslogCheckChange("load ON", newLoadOn, loadOn);
     
-    digitalWrite(loadPin, loadOn);
+    //digitalWrite(loadPin, loadOn);
+
+	// echo it on the green LED
+    digitalWrite(greenLEDPin, loadOn);
   }
 }

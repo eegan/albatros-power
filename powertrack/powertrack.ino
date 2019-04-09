@@ -3,7 +3,7 @@
 // other built-in libraries (not mentioned)
 // RTCLib by Adafruit: tested against v. 1.2.0
 
-#include "mytypes.h"
+#include "powertrack.h"
 
 const long loopInterval = 200;           // main loop pace (interval between runs)
 const long mainLoopSleepTimeMs = 100;    // time to sleep
@@ -15,14 +15,15 @@ void setup()
 {
   monitorInit();  // do this first so we can print status messages  
   rtcInit();      // do this next so we know what time it is before we depend on this
-  monitorInit2(); // after RTC init
   cfgInit();
   lastLoopBegin = millis();
   victronInit();
   // commented out since it re-inits the serial port also used for monitor; TODO implement a flag here
   //debugInit();
   loggerInit();
+  monitorInit2(); // after RTC and logger init
   loadctlInit();
+  statusInit();
 }
 
 void loop()
