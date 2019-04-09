@@ -2,7 +2,6 @@
 // SD library (built-in): tested against v. 1.2.2
 // other built-in libraries (not mentioned)
 // RTCLib by Adafruit: tested against v. 1.2.0
-// ArduinoSTL by Mike Matera v. 1.1.1
 
 #include "mytypes.h"
 
