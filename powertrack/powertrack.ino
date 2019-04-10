@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////////////////
+// Main ALBATROS power system .ino file
+/////////////////////////////////////////////////////////////////////////////////////
+
 // Library dependencies:
 // SD library (built-in): tested against v. 1.2.2
 // other built-in libraries (not mentioned)
@@ -15,7 +19,7 @@ const long mainLoopSleepTimeMs = 100;    // time to sleep
 long lastLoopBegin;
 #endif
 
-HardwareSerial &monitorPort = Serial;
+HardwareSerial &monitorPort = Serial1;
 
 void setup()
 {

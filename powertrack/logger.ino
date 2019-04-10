@@ -1,3 +1,8 @@
+/////////////////////////////////////////////////////////////////////////////////////
+// Logging functions
+// Regular (time based) logging, and event logging
+/////////////////////////////////////////////////////////////////////////////////////
+
 // Tested against SD Card library (built-in) version 1.2.2
 #include "powertrack.h"
 #include <SD.h>
@@ -5,10 +10,10 @@
 int sampleCount = 0;
 long timeSinceLastLogEntry;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-// main routine-called functions
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////////////////////////////
+// loggerInit
+// Init (called from main)
+/////////////////////////////////////////////////////////////////////////////////////
 void loggerInit()
 {
   SD.begin(SD_CSpin);
@@ -16,13 +21,16 @@ void loggerInit()
   timeSinceLastLogEntry = rtcGetTime();
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+// loggerLoopHandler
+// Loop handler (called from main)
+/////////////////////////////////////////////////////////////////////////////////////
 void loggerLoopHandler()
 {
   long now = rtcGetTime();
   if (now - timeSinceLastLogEntry > cfg_fieldValue(ndx_secsPerLog)) {
     loggerLogEntry();
     timeSinceLastLogEntry = now;
-    monitorPort.println("Logging");
   }
 }
 
@@ -122,8 +130,13 @@ void loggerNotifyVictronSample()
 {
   for (int i=0; i< COUNT_OF(logVariables); i++) {
     int ndx = logVariables[i].sourceIndex;
+    
     // get the Victron data field, unless it's the load we are logging
-    long value = -1 == ndx ? loadctlGetLoadState() : victronGetFieldValue(ndx);    
+    long value = -1 == ndx ? loadctlGetLoadState() : victronGetFieldValue(ndx); 
+    // Note: strictly speaking it doesn't make sense to tie the load state sampling to Victron data packets
+    // Logically this should be done independently. But practically speaking, if the Victron stops sending
+    // data, it probably means something pretty bad.
+       
     switch(logVariables[i].type) {
       case lvtNumeric:
         logVariables[i].sum += value;
