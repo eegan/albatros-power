@@ -289,7 +289,8 @@ void readElement(char &checksum, char terminator) {
 void victronDumpStatus(HardwareSerial &p)
 {
   for (int i=0; i<FI_field_count; i++) {
-    if (fieldDescriptors[i].type != FT_string) {
+    if (fieldDescriptors[i].type != FT_string) 
+    {
       p.print(fieldDescriptors[i].tag);
       p.print(" = ");
       p.println(fieldDescriptors[i].value);

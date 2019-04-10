@@ -71,3 +71,8 @@ void loadctlLoopHandler()
     digitalWrite(greenLEDPin, loadOn);
   }
 }
+
+bool loadctlGetLoadState()
+{
+  return loadOn;
+}

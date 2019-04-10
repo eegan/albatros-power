@@ -2,8 +2,6 @@
 #include "powertrack.h"
 #include <SD.h>
 
-#define SD_CSpin 10 // Chip-select pin for SD
-
 int sampleCount = 0;
 long timeSinceLastLogEntry;
 
@@ -36,7 +34,7 @@ void loggerLoopHandler()
 // loggerRootDir
 // list directory of SD root, to port p
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerRootDir (HardwareSerial &p)
+void loggerRootDir (Stream &p)
 {
   File dir = SD.open("/");
   while (true)
@@ -66,7 +64,7 @@ void loggerRootDir (HardwareSerial &p)
 // loggerDumpFile
 // dump contents of specified file, to port p
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerDumpFile(HardwareSerial &p, char *filename)
+void loggerDumpFile(Stream &p, char *filename)
 {
   char buf[20];
   char c;
@@ -86,7 +84,7 @@ void loggerDumpFile(HardwareSerial &p, char *filename)
 // loggerEraseFile
 // erase specified file
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerEraseFile (HardwareSerial &p, char *filename)
+void loggerEraseFile (Stream &p, char *filename)
 {
   SD.remove(filename);
 }
@@ -95,6 +93,7 @@ enum logVarType {
   lvtNumeric      // numeric value, will accumulate averaged/min/max
  ,lvtEnumSample   // enum value, will sample current value
  ,lvtEnumAccum    // enum value, will accumulate bitmap of values seen in log entry interval
+ ,lvtLoad         // special case: read the load state
 };
 
 struct {
@@ -113,8 +112,8 @@ struct {
   ,{"BatCur",   FI_I,   lvtNumeric}
   ,{"Error",    FI_ERR, lvtEnumSample}
   ,{"State",    FI_CS,  lvtEnumAccum}
-  ,{"MPPT",     FI_CS,  lvtEnumAccum}
-    
+  ,{"MPPT",     FI_MPPT,  lvtEnumAccum}
+  ,{"Load",     -1,  lvtEnumAccum}      // hack (special case)
 };
 
 
@@ -122,7 +121,9 @@ struct {
 void loggerNotifyVictronSample()
 {
   for (int i=0; i< COUNT_OF(logVariables); i++) {
-    long value = victronGetFieldValue(logVariables[i].sourceIndex);    
+    int ndx = logVariables[i].sourceIndex;
+    // get the Victron data field, unless it's the load we are logging
+    long value = -1 == ndx ? loadctlGetLoadState() : victronGetFieldValue(ndx);    
     switch(logVariables[i].type) {
       case lvtNumeric:
         logVariables[i].sum += value;
@@ -195,7 +196,6 @@ void loggerLogEntry()
     f.println();
   }
 
-
   // Write out the timestamp and the sample count
   f.print(rtcGetTime());
   f.print(", ");
@@ -208,7 +208,7 @@ void loggerLogEntry()
     f.print(", ");
     switch(logVariables[i].type) {
       case lvtNumeric:
-        f.print((float)logVariables[i].sum / sampleCount, 3);
+        f.print((float)logVariables[i].sum / sampleCount, 2); // 2 decimals, should be enough precision
         f.print(", ");
         f.print(logVariables[i].min);
         f.print(", ");
