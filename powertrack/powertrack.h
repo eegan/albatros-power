@@ -27,7 +27,7 @@ typedef short INT16;
 enum { statusSDError };
 
 
-
+#if 0
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Double hardwareserial function
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,11 +58,14 @@ void DoubleHWS::begin(unsigned long baud, byte config)
 {
   myh1.begin(baud, config);
   myh2.begin(baud, config);
+//  Serial.println("dhws begin");
 }
 
 void DoubleHWS::begin(unsigned long baud)
 {
   begin(baud, SERIAL_8N1);
+//  Serial.begin(9600);
+//  Serial.println("dhws begin");
 }
 
 int DoubleHWS::available(void)
@@ -88,7 +91,7 @@ size_t DoubleHWS::write(uint8_t byte)
   myh2.write(byte);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
+#endif 
 
 
 #endif

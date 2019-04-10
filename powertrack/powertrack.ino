@@ -15,10 +15,7 @@ const long mainLoopSleepTimeMs = 100;    // time to sleep
 long lastLoopBegin;
 #endif
 
-DoubleHWS dhws = DoubleHWS(Serial1, Serial2);
-
 HardwareSerial &monitorPort = Serial;
-//DoubleHWS &monitorPort = dhws;
 
 void setup()
 {

@@ -46,9 +46,9 @@ void monitorLoopHandler() {
     return;
 
   // show what was received as a command line
-  monitorPort.print(">");
+  monitorPort.print("<");
   monitorPort.print(mon_buf);
-  monitorPort.println("<");
+  monitorPort.println(">");
     
   // parse the line into ' ' separated arguments
   command = strtok(mon_buf, " ");
@@ -106,12 +106,7 @@ void monitorLoopHandler() {
   else if (0 == strcmp(command, "era")) {  
     monitorPort.println(arg1);
     loggerEraseFile(monitorPort, arg1);
-  }  
-  else if (0 == strcmp(command, "test")) {  
-    monitorPort.println(arg1);
-    loggerLogEntry();
-    monitorPort.println("Called log entry");
-  }  
+  }
   
   else {
       monitorPort.print(

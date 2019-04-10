@@ -286,7 +286,7 @@ void readElement(char &checksum, char terminator) {
 }
 
 // TODO: add string fields (they have to also be stored ...)
-void victronDumpStatus(HardwareSerial &p)
+void victronDumpStatus(Stream &p)
 {
   for (int i=0; i<FI_field_count; i++) {
     if (fieldDescriptors[i].type != FT_string) 

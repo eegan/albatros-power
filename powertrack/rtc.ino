@@ -17,8 +17,13 @@ void rtcInit()
   
   e_rtcState = rtc.initialized() ? INITIALIZED : UNINITIALIZED;
 }
+// temporary storage while setting RTC
+DateTime dt;
+TimeSpan tm;
 
+// value that will be used for the accessors and gets set by rtcReadTime()
 DateTime now;
+
 void rtcReadTime() {
   now = rtc.now();
 }
@@ -56,10 +61,6 @@ char *rtcPresentTime()
     now.hour(), now.minute(), now.second() );
   return buf;
 }
-
-// temporary storage while setting RTC
-DateTime dt;
-TimeSpan tm;
 
 //HardwareSerial &mp = monitorPort;
 

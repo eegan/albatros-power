@@ -89,7 +89,7 @@ struct {
   ,{FT_UINT32, 48L}     // minimum calculated hours of reserve to run during the day
   ,{FT_UINT32, 36360L}  // uV / hour nominal discharge rate (220Ah, 50% discharge, 2V span, 2A load)
   ,{FT_UINT32, 60}      // seconds between log entries
-  ,{FT_UINT32, 10000}   // maximum seconds between victron data packets, before load turned off
+  ,{FT_UINT32, 1000}    // maximum seconds between victron data packets, before load turned off
 };
 
 // Field names
@@ -187,7 +187,7 @@ void cfg_saveConfig() {
 // cfgDumpFieldValues
 // print out all field values with indexes
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void cfgDumpFieldValues(HardwareSerial &p) {
+void cfgDumpFieldValues(Stream &p) {
   // p.write("magic:    "); p.println(cfg.validation.magic, 16);
   p.write("Configuration level:   "); p.println(cfg.validation.cfg_level, 10);
   p.write("Newly initialized:     "); p.println(configNew, 10);
