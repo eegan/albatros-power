@@ -34,13 +34,11 @@ struct valstructtag {
 
   // parameters go here
   UINT32 fw_rev;
-  UINT32 test;
   
 } cfg = {
   {0, 0} // will be overwritten anyway
   // defaults go here
   , FW_VERSION
-  , 0xDEADBEEF 
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +66,7 @@ enum e_fndx {
 };
 
 // Arduino is broken
-// This enum declaration works (into a global scope) if it is here, but not if they are in victron.ino.
+// This enum declaration works (into a global scope) if it is here, but not if it is in victron.ino.
 // Please maintain them in both places, until we figure out what to do.
 // TODO: perhaps put them in a .h file
 enum victronFieldEnum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL, 
