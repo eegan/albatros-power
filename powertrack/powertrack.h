@@ -11,6 +11,8 @@ typedef unsigned short UINT16;
 typedef long INT32;
 typedef short INT16;
 
+#define CRLF "\r\n"
+
 // Macro to return number of elements in an array
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -24,7 +26,7 @@ typedef short INT16;
 #define DAY_SECONDS 86400
 
 // Status codes
-enum { statusSDError };
+enum { statusSDError, statusVictronTimeoutError, statusBatteryLowError };
 
 
 #if 0

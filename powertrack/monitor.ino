@@ -42,7 +42,17 @@ void monitorLoopHandler() {
   char c;
   
   while (EOF != (c = monitorPort.read())) {
-    mon_buf[inbufpos++] = c;
+    if ('\b' == c || 0x7f == c) { // backspace or rubout
+      if (0 != inbufpos) {
+        inbufpos--;
+        monitorPort.print("\b \b");
+      }
+    }
+    else {
+      mon_buf[inbufpos++] = c;
+      monitorPort.print(c);
+    }
+    
     if (inbufpos >= sizeof mon_buf) {
       // this shouldn't happen
       monitorPort.println("Line too long.");
@@ -65,7 +75,7 @@ void monitorLoopHandler() {
   monitorPort.print("<");
   monitorPort.print(mon_buf);
   monitorPort.println(">");
-    
+
   // parse the line into ' ' separated arguments
   command = strtok(mon_buf, " ");
   arg1 = strtok(NULL, " ");
@@ -126,18 +136,18 @@ void monitorLoopHandler() {
   
   else {
       monitorPort.print(
-      "def                  - dump EEPROM fields\n"
-      "inv                  - invalidate EEPROM (use to reinitialize or to test init code)\n"
-      "com                  - commit: save in-memory config fields to EEPROM\n"
-      "set index value      - set config field[index] to value (in memory)\n"
-      "rtc                  - read current RTC setting\n"
-      "rtc time hh:mm:ss    - set RTC time (not into hardware)\n"
-      "rtc date yyyy/mm/dd  - set RTC date (not into hardware)\n"
-      "rtc adj              - actually adjust RTC\n"
-      "vs                   - Victron status, print out current Victron parameters\n"
-      "ls                   - list SD card root files\n"
-      "dmp filename         - dump contents of specified file\n"
-      "era filename         - erase specified file\n"
+      "def                  - dump EEPROM fields" CRLF
+      "inv                  - invalidate EEPROM (use to reinitialize or to test init code)" CRLF
+      "com                  - commit: save in-memory config fields to EEPROM" CRLF
+      "set index value      - set config field[index] to value (in memory)" CRLF
+      "rtc                  - read current RTC setting" CRLF
+      "rtc time hh:mm:ss    - set RTC time (not into hardware)" CRLF
+      "rtc date yyyy/mm/dd  - set RTC date (not into hardware)" CRLF
+      "rtc adj              - actually adjust RTC" CRLF
+      "vs                   - Victron status, print out current Victron parameters" CRLF
+      "ls                   - list SD card root files" CRLF
+      "dmp filename         - dump contents of specified file" CRLF
+      "era filename         - erase specified file" CRLF
     );
   } 
 }

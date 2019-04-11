@@ -13,7 +13,7 @@ void statusInit()
 }
 
 
-void reportStatus(int code)
+void reportStatus(int code, bool state)
 {
   
 }

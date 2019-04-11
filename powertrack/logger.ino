@@ -82,11 +82,15 @@ void loggerDumpFile(Stream &p, char *filename)
     return;
   }
 
-  // TODO: probably don't need the first while
-  while(int n = f.available()) {
-    while( EOF != (c = f.read()) )  // until EOF
-      while (0 == p.write(c));      // keep trying until the character is written (pacing)
+  while( EOF != (c = f.read()) ) {    // until EOF
+    while (0 == p.write(c));          // keep trying until the character is written (pacing)
+    if (0x03 == p.read()) {
+      p.write(CRLF);
+      goto exit;  // check for CTRL-C
+    }
   }
+  exit:
+  f.close();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // loggerEraseFile
@@ -179,7 +183,7 @@ void loggerLogEntry()
   // open the file
   File f = SD.open(logFileName, FILE_WRITE);
   if (NULL == f) {
-    reportStatus(statusSDError);
+    reportStatus(statusSDError, true);
     return;    
   }
   
