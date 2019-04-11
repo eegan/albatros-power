@@ -23,7 +23,7 @@ void loadctlInit()
 // Conditions that go into determining load status (plus load status)
 bool lowVoltageCutoff = false;  // True if cut off because of low voltage. Hysteresis implemented.
 bool dataAgeCutoff = false;     // True if cut off because of Victron data being too old
-bool dayTime = false;           // True if we are in daytime
+bool daytime = false;           // True if we are in daytime
 bool loadOn = false;
 
 
@@ -60,30 +60,30 @@ void loadctlLoopHandler()
     }
 
     // TODO: test data age by setting it smallish and unplugging the Victron data
-    // TODO: test the daytime code
+    // TODO: test the daytime code (mostly done)
 
     // See if it's been too long since we got a data packet from the Victron
     bool newDataAgeCutoff = victronGetDataAge() > cfg_fieldValue(ndx_maxVDataAge);
     statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff);
 
     // See if it's daytime
-	long dayLength = dayEnd - dayStart; 
-	if (dayLength < 0) dayLength += DAY_SECONDS;
-    
-	long timeAfterDayStart = time_of_day - dayStart; 
-	if (timeAfterDayStart < 0) timeAfterDayStart += DAY_SECONDS;
-	  bool newDayTime = timeAfterDayStart < dayLength;
+  	long dayLength = dayEnd - dayStart; 
+  	if (dayLength < 0) dayLength += DAY_SECONDS;
+      
+  	long timeAfterDayStart = time_of_day - dayStart; 
+  	if (timeAfterDayStart < 0) timeAfterDayStart += DAY_SECONDS;
+  	  bool newDaytime = timeAfterDayStart < dayLength;
 	
-    statuslogCheckChange("daytime", newDayTime, dayTime);
+    statuslogCheckChange("daytime", newDaytime, daytime);
 
     // See if we're turning on (or off)
     // On unless it's daytime, too old data, or too low battery voltage
-    bool newLoadOn = !lowVoltageCutoff & !dataAgeCutoff & !dayTime;
+    bool newLoadOn = !lowVoltageCutoff & !dataAgeCutoff & !daytime;
     statuslogCheckChange("load ON", newLoadOn, loadOn);
     
-    //digitalWrite(loadPin, loadOn);
+    digitalWrite(loadPin, loadOn);
 
-	// echo it on the green LED
+	  // echo it on the green LED
     digitalWrite(greenLEDPin, loadOn);
   }
 }
