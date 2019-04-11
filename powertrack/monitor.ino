@@ -5,13 +5,28 @@
 #include "powertrack.h"
 #include <EEPROM.h>
 
-#define MAX_BUF_LEN 30 // max number of bytes in a command
+#define LINE_BUF_LEN 30 // max number of bytes in a command
 #define MAX_ARG_LEN 12 // max characters per arg
 #define MAX_ARG_NUM 3  // max number of args per line
 
 bool error_flag = false;
 int inbufpos;
 
+char helpstring[] = 
+      "def                  - dump EEPROM fields" CRLF
+      "inv                  - invalidate EEPROM (use to reinitialize or to test init code)" CRLF
+      "com                  - commit: save in-memory config fields to EEPROM" CRLF
+      "set index value      - set config field[index] to value (in memory)" CRLF
+      "rtc                  - read current RTC setting" CRLF
+      "rtc time hh:mm:ss    - set RTC time (not into hardware)" CRLF
+      "rtc date yyyy/mm/dd  - set RTC date (not into hardware)" CRLF
+      "rtc adj              - actually adjust RTC" CRLF
+      "vs                   - Victron status, print out current Victron parameters" CRLF
+      "ls                   - list SD card root files" CRLF
+      "dmp filename         - dump contents of specified file" CRLF
+      "era filename         - erase specified file" CRLF
+      ;
+      
 /////////////////////////////////////////////////////////////////////////////////////
 // monitorInit
 // Init (early, called from main)
@@ -28,7 +43,8 @@ void monitorInit() {
 void monitorInit2() {
   statuslogWriteLine("ALBATROS power system v 1.0");
   statuslogWriteLine(rtcPresentTime());
-  monitorPort.println("serial monitor");
+  monitorPort.println("Serial monitor - commands:");
+  monitorPort.print(helpstring);
   inbufpos = 0;
 }
 
@@ -37,7 +53,7 @@ void monitorInit2() {
 // Loop handler (called from main)
 /////////////////////////////////////////////////////////////////////////////////////
 void monitorLoopHandler() {
-  char mon_buf[MAX_BUF_LEN];
+  char mon_buf[LINE_BUF_LEN];
   char *command, *arg1, *arg2;
   char c;
   
@@ -49,14 +65,10 @@ void monitorLoopHandler() {
       }
     }
     else {
-      mon_buf[inbufpos++] = c;
-      monitorPort.print(c);
-    }
-    
-    if (inbufpos >= sizeof mon_buf) {
-      // this shouldn't happen
-      monitorPort.println("Line too long.");
-      inbufpos = 0;
+      if (inbufpos+1 < LINE_BUF_LEN) {
+        mon_buf[inbufpos++] = c;
+        monitorPort.print(c);
+      }
     }
   }
 
@@ -132,22 +144,8 @@ void monitorLoopHandler() {
   else if (0 == strcmp(command, "era")) {  
     monitorPort.println(arg1);
     loggerEraseFile(monitorPort, arg1);
-  }
-  
+  }  
   else {
-      monitorPort.print(
-      "def                  - dump EEPROM fields" CRLF
-      "inv                  - invalidate EEPROM (use to reinitialize or to test init code)" CRLF
-      "com                  - commit: save in-memory config fields to EEPROM" CRLF
-      "set index value      - set config field[index] to value (in memory)" CRLF
-      "rtc                  - read current RTC setting" CRLF
-      "rtc time hh:mm:ss    - set RTC time (not into hardware)" CRLF
-      "rtc date yyyy/mm/dd  - set RTC date (not into hardware)" CRLF
-      "rtc adj              - actually adjust RTC" CRLF
-      "vs                   - Victron status, print out current Victron parameters" CRLF
-      "ls                   - list SD card root files" CRLF
-      "dmp filename         - dump contents of specified file" CRLF
-      "era filename         - erase specified file" CRLF
-    );
+      monitorPort.print(helpstring);
   } 
 }
