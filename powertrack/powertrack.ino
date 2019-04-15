@@ -23,6 +23,7 @@ HardwareSerial &monitorPort = Serial1;
 
 void setup()
 {
+  debugInit();
   monitorInit();  // do this first so we can print status messages  
   rtcInit();      // do this next so we know what time it is before we depend on this
   cfgInit();

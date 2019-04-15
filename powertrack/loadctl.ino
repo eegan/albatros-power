@@ -5,9 +5,8 @@
 
 #include "powertrack.h"
 
-long time_of_day;
-long loadctl_cooldown = 500; // miliseconds between full runs
-long loadctl_last_run = 0; // last time this loop ran
+long timeOfDay;
+runTimer loadRunTimer(1* 1000L);  // run interval
 
 /////////////////////////////////////////////////////////////////////////////////////
 // loadctlInit
@@ -21,11 +20,21 @@ void loadctlInit()
 }
 
 // Conditions that go into determining load status (plus load status)
+// TODO: prefix these with bool
 bool lowVoltageCutoff = false;  // True if cut off because of low voltage. Hysteresis implemented.
 bool dataAgeCutoff = false;     // True if cut off because of Victron data being too old
 bool daytime = false;           // True if we are in daytime
+bool measureTime = false;       // True if we are within the interval in which we characterize the battery voltage
 bool loadOn = false;
+bool runDuringDay = false;      // True if we are scheduled to run during the (following) day
 
+long batVoltN = 0;
+float batTimeSum = 0;
+float batVoltSum = 0;
+float batTimeSqSum = 0;
+float batTVSum = 0;
+
+long measureStartTime;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // loadctlLoopHandler
@@ -33,16 +42,10 @@ bool loadOn = false;
 /////////////////////////////////////////////////////////////////////////////////////
 void loadctlLoopHandler()
 {
-  // TODO: be sure this works when millis() wraps, I think it's probably OK (EE)
-  if (millis() - loadctl_last_run >= loadctl_cooldown) {
-    loadctl_last_run = millis();
+  if (loadRunTimer.runNow()) {        
+    timeOfDay = rtcGetTime() % DAY_SECONDS;
+    rtcReadTime();
     
-    INT32 dayStart = cfg_fieldValue(ndx_dayStart);
-    INT32 dayEnd = cfg_fieldValue(ndx_dayEnd);
-    long maxBatVoltageAge = 1000; // arbitrary value for now
-    
-    time_of_day = rtcGetTime() % DAY_SECONDS;
-
     // See if the voltage is too low.
     // If we haven't seen a sample yet, don't make any decision about voltage cutoffs.
     // (The data age cutoff will kick in if we never get a sample.) 
@@ -68,16 +71,64 @@ void loadctlLoopHandler()
     statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff);
     reportStatus(statusVictronTimeoutError, dataAgeCutoff);
 
-    // See if it's daytime
-  	long dayLength = dayEnd - dayStart; 
-  	if (dayLength < 0) dayLength += DAY_SECONDS;
+    // See if the voltage measurement flag changes
+    bool newMeasureTime = betweenTimes(timeOfDay, cfg_fieldValue(ndx_measureStart), cfg_fieldValue(ndx_measureEnd));  
+    if (statuslogCheckChange("battery measurement time", newMeasureTime, measureTime)) {
+      // handle change
+      if (measureTime) {
+        // It just started. Initialize it.
+        batVoltN = 0;
+        batTimeSum = 0;
+        batVoltSum = 0;
+        batTimeSqSum = 0;
+        batTVSum = 0;
+        measureStartTime = rtcTime();
+      }
+      else {
+        // It just ended. Analyze it and make conclusions.
+        float computedSlope = ( batTVSum - batTimeSum * batVoltSum / batVoltN) / (batTimeSqSum - batTimeSum*batTimeSum / batVoltN );
+        float intercept = (batVoltSum - computedSlope * batTimeSum) / batVoltN;
+
+        monitorPort.print("Computed slope: "); monitorPort.println(computedSlope);
+        monitorPort.print("Intercept: "); monitorPort.println(intercept);
+
+        // it might be different if we smooth with the EEPROM value
+        float slope = computedSlope;
+
+        float proj = intercept + slope * cfg_fieldValue(ndx_hoursReserve) * 3600L;
+        bool runDuringDay = proj > cfg_fieldValue(ndx_vbatOffThresholdMv);
+        statusLogPrint("Computed slope", computedSlope);
+        statusLogPrint("Intercept", intercept);
+        statusLogPrint("Projected value", proj);
+        statusLogPrint("Run during day", runDuringDay);
+      }
+    }
+
+    // handle measurement, if active
+    if (measureTime) {
+      // accumulate statistics
+      float batVolt = victronGetFieldValue(FI_V);
+      float batTime = rtcTime() - measureStartTime;
       
-  	long timeAfterDayStart = time_of_day - dayStart; 
-  	if (timeAfterDayStart < 0) timeAfterDayStart += DAY_SECONDS;
-  	  bool newDaytime = timeAfterDayStart < dayLength;
-	
+      batVoltN++;
+      batTimeSum += batTime;
+      batVoltSum += batVolt;
+      batTimeSqSum += batTime*batTime;
+      batTVSum += batTime * batVolt;
+
+//      monitorPort.print("measure voltage - ");
+//      monitorPort.print(batVoltN); monitorPort.print(" ");     
+//      monitorPort.print(batVolt); monitorPort.print(" "); 
+//      monitorPort.print(batTime); monitorPort.print(" "); 
+//      monitorPort.println();
+            
+    }
+    
+    // See if it's daytime
+    bool newDaytime = betweenTimes(timeOfDay, cfg_fieldValue(ndx_dayStart), cfg_fieldValue(ndx_dayEnd));    
     statuslogCheckChange("daytime", newDaytime, daytime);
 
+    
     // See if we're turning on (or off)
     // On unless it's daytime, too old data, or too low battery voltage
     bool newLoadOn = !lowVoltageCutoff & !dataAgeCutoff & !daytime;
@@ -88,6 +139,17 @@ void loadctlLoopHandler()
 	  // echo it on the green LED
     digitalWrite(greenLEDPin, loadOn);
   }
+}
+
+bool betweenTimes(long timeOfDay, long startTime, long endTime)
+{
+  long interval = endTime - startTime; 
+  if (interval < 0) interval += DAY_SECONDS;
+
+  long timeAfterStart = timeOfDay - startTime; 
+  if (timeAfterStart < 0) timeAfterStart += DAY_SECONDS;
+  
+  return timeAfterStart < interval;  
 }
 
 bool loadctlGetLoadState()

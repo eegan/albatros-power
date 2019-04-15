@@ -266,23 +266,54 @@ void loggerZeroVariables()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // statuslogCheckChange
-// Assign new value to old value, printing a log message if it is a change
+// Assign new value to old value, printing a log message (and returning true) if it is a change
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void statuslogCheckChange(char *string, bool newValue, bool &currentValue)
+bool statuslogCheckChange(char *string, bool newValue, bool &currentValue)
 {
-  char buf[50];  // should be enough?
-  // TODO: actually print to log file
+  bool changed = false;
   if (newValue != currentValue) {
     currentValue = newValue;    
-      
-    strcpy(buf, rtcPresentTime());
-    strcat(buf, " ");
-    strcat(buf, string);
-    strcat(buf, " = ");
-    strcat(buf, currentValue? "TRUE" : "FALSE");
-
-    statuslogWriteLine(buf);
+    changed = true;
+    statusLogPrint(string, newValue);
   }
+  return changed;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Status log print functions for strings, longs and floats
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// TODO: ugly unsafe literal buffer lengths
+void statusLogPrint(char *string, bool flag)
+{
+  const int buflen = 100;
+  char buf[buflen];
+
+  sprintf(buf, "%19s %50s = %5s", rtcPresentTime(), string, flag? "TRUE" : "FALSE");
+
+  statuslogWriteLine(buf);
+}
+
+void statusLogPrint(char *string, long l)
+{
+  const int buflen = 100;
+  char buf[buflen];
+
+  sprintf(buf, "%19s %50s = %ld", rtcPresentTime(), string, l);
+
+  statuslogWriteLine(buf);
+}
+
+void statusLogPrint(char *string, float f)
+{
+  const int buflen = 100;
+  char buf[buflen];
+  char buf1[30];
+
+  dtostrf(f, 7, 3, buf1);
+
+  sprintf(buf, "%19s %50s = %s", rtcPresentTime(), string, buf1);
+
+  statuslogWriteLine(buf);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

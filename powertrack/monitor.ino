@@ -58,6 +58,9 @@ void monitorLoopHandler() {
   char c;
   
   while (EOF != (c = monitorPort.read())) {
+
+//    debug.print(c,16); debug.print(" ");  
+
     if ('\b' == c || 0x7f == c) { // backspace or rubout
       if (0 != inbufpos) {
         inbufpos--;
@@ -72,7 +75,7 @@ void monitorLoopHandler() {
     }
   }
 
-  // no fixing up needed, if there's nothing in the buffer
+  // no fixing up needed (and nothing more to do) if there's nothing in the buffer
   if (0 == inbufpos)
     return;
 
@@ -92,6 +95,7 @@ void monitorLoopHandler() {
   command = strtok(mon_buf, " ");
   arg1 = strtok(NULL, " ");
   arg2 = strtok(NULL, " ");
+  
   inbufpos = 0;
   
   if (0 == strcmp(command, "def")) {

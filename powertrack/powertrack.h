@@ -29,6 +29,36 @@ typedef short INT16;
 enum { statusSDError, statusVictronTimeoutError, statusBatteryLowError };
 
 
+class runTimer
+{
+  long lastRun;
+  long interval;
+public:
+  runTimer(long);
+  bool runNow();
+  void reinit();
+};
+
+runTimer::runTimer(long intrval): interval(intrval)
+{
+  reinit();
+}
+
+void runTimer::reinit()
+{
+  lastRun = millis();  
+}
+
+bool runTimer::runNow()
+{
+  long m;
+  if ((m = millis()) - lastRun >= interval) {
+    lastRun = m;
+    return true;
+  }
+  return false;
+}
+
 #if 0
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Double hardwareserial function
