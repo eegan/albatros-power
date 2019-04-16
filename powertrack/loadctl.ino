@@ -115,9 +115,8 @@ void loadctlLoopHandler()
     statuslogCheckChange("load ON", newLoadOn, loadOn);
     
     digitalWrite(loadPin, loadOn);
+    statusNotifyLoad(loadOn);    
 
-	  // echo it on the green LED
-    digitalWrite(greenLEDPin, loadOn);
   }
 }
 
