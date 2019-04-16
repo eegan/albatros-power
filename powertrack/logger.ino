@@ -354,12 +354,8 @@ void statuslogWriteLine(char *string, bool echo)
   }  
 }
 
-//void statuslogWriteLine(char *string)
-//{
-//  statuslogWriteLine(string, true);
-//}
-//
-//void loggerLogCommand(char *string)
-//{
-//  statuslogWriteLine(string, false);
-//}
+// default echo to true for old callers
+void statuslogWriteLine(char *string)
+{
+  statuslogWriteLine(string, true);
+}
