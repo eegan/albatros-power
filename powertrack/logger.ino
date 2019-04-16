@@ -177,7 +177,7 @@ void loggerLogEntry()
 //  monitorPort.println(newDay);
 
   // Format filename based on day
-  sprintf(logFileName, "%04d%02d%02d.log", rtcYear(), rtcMonth(), rtcDay());
+  sprintf(logFileName, "%04d%02d%02d.csv", rtcYear(), rtcMonth(), rtcDay());
   bool newDay = 0 == SD.exists(logFileName);
     
   // open the file
@@ -303,15 +303,15 @@ void statusLogPrint(char *string, long l)
   statuslogWriteLine(buf);
 }
 
-void statusLogPrint(char *string, float f)
+void statusLogPrint(char *string, double d)
 {
   const int buflen = 100;
   char buf[buflen];
-  char buf1[30];
+  char bufd[30];  // buffer for nummber
 
-  dtostrf(f, 7, 3, buf1);
+  dtostrf(d, 7, 3, bufd);
 
-  sprintf(buf, "%19s %50s = %s", rtcPresentTime(), string, buf1);
+  sprintf(buf, "%19s %50s = %s", rtcPresentTime(), string, bufd);
 
   statuslogWriteLine(buf);
 }
@@ -322,9 +322,21 @@ void statusLogPrint(char *string, float f)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void statuslogWriteLine(char *string)
 {
+  char logFileName[13]; // 8.3 + null  
+  
   monitorPort.println(string);
 
-  File f = SD.open(statusLogFilename, FILE_WRITE);
+  // Format filename based on month
+  sprintf(logFileName, "%04d%02d.log", rtcYear(), rtcMonth(), rtcDay());
+  bool newDay = 0 == SD.exists(logFileName);
+    
+  // open the file
+  File f = SD.open(logFileName, FILE_WRITE);
+  if (NULL == f) {
+    reportStatus(statusSDError, true);
+    return;    
+  }
+
   if (f) {
     f.println(string);
     f.close();

@@ -29,10 +29,10 @@ bool loadOn = false;
 bool runDuringDay = false;      // True if we are scheduled to run during the (following) day
 
 long batVoltN = 0;
-float batTimeSum = 0;
-float batVoltSum = 0;
-float batTimeSqSum = 0;
-float batTVSum = 0;
+double batTimeSum = 0;
+double batVoltSum = 0;
+double batTimeSqSum = 0;
+double batTVSum = 0;
 
 long measureStartTime;
 
@@ -86,42 +86,22 @@ void loadctlLoopHandler()
       }
       else {
         // It just ended. Analyze it and make conclusions.
-        float computedSlope = ( batTVSum - batTimeSum * batVoltSum / batVoltN) / (batTimeSqSum - batTimeSum*batTimeSum / batVoltN );
-        float intercept = (batVoltSum - computedSlope * batTimeSum) / batVoltN;
+        double computedSlope = ( batTVSum - batTimeSum * batVoltSum / batVoltN) / (batTimeSqSum - batTimeSum*batTimeSum / batVoltN );
+        double intercept = (batVoltSum - computedSlope * batTimeSum) / batVoltN;
 
         monitorPort.print("Computed slope: "); monitorPort.println(computedSlope);
         monitorPort.print("Intercept: "); monitorPort.println(intercept);
 
         // it might be different if we smooth with the EEPROM value
-        float slope = computedSlope;
+        double slope = computedSlope;
 
-        float proj = intercept + slope * cfg_fieldValue(ndx_hoursReserve) * 3600L;
+        double proj = intercept + slope * cfg_fieldValue(ndx_hoursReserve) * 3600L;
         bool runDuringDay = proj > cfg_fieldValue(ndx_vbatOffThresholdMv);
         statusLogPrint("Computed slope", computedSlope);
         statusLogPrint("Intercept", intercept);
         statusLogPrint("Projected value", proj);
         statusLogPrint("Run during day", runDuringDay);
       }
-    }
-
-    // handle measurement, if active
-    if (measureTime) {
-      // accumulate statistics
-      float batVolt = victronGetFieldValue(FI_V);
-      float batTime = rtcTime() - measureStartTime;
-      
-      batVoltN++;
-      batTimeSum += batTime;
-      batVoltSum += batVolt;
-      batTimeSqSum += batTime*batTime;
-      batTVSum += batTime * batVolt;
-
-//      monitorPort.print("measure voltage - ");
-//      monitorPort.print(batVoltN); monitorPort.print(" ");     
-//      monitorPort.print(batVolt); monitorPort.print(" "); 
-//      monitorPort.print(batTime); monitorPort.print(" "); 
-//      monitorPort.println();
-            
     }
     
     // See if it's daytime
@@ -131,7 +111,7 @@ void loadctlLoopHandler()
     
     // See if we're turning on (or off)
     // On unless it's daytime, too old data, or too low battery voltage
-    bool newLoadOn = !lowVoltageCutoff & !dataAgeCutoff & !daytime;
+    bool newLoadOn = !lowVoltageCutoff && !dataAgeCutoff && (!daytime || runDuringDay);
     statuslogCheckChange("load ON", newLoadOn, loadOn);
     
     digitalWrite(loadPin, loadOn);
@@ -139,6 +119,30 @@ void loadctlLoopHandler()
 	  // echo it on the green LED
     digitalWrite(greenLEDPin, loadOn);
   }
+}
+
+
+void  loadctlNotifyVictronSample()
+{
+  // handle measurement, if active
+  if (measureTime) {
+    // accumulate statistics
+    double batVolt = victronGetFieldValue(FI_V);
+    double batTime = rtcTime() - measureStartTime;
+    
+    batVoltN++;
+    batTimeSum += batTime;
+    batVoltSum += batVolt;
+    batTimeSqSum += batTime*batTime;
+    batTVSum += batTime * batVolt;
+
+//    monitorPort.print("measure voltage - ");
+//    monitorPort.print(batVoltN); monitorPort.print(" ");     
+//    monitorPort.print(batVolt); monitorPort.print(" "); 
+//    monitorPort.print(batTime); monitorPort.print(" "); 
+//    monitorPort.println();
+            
+    }
 }
 
 bool betweenTimes(long timeOfDay, long startTime, long endTime)

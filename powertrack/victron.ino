@@ -308,6 +308,7 @@ void victronUpdateNotify()
 {
   //TODO: notify other modules
   loggerNotifyVictronSample();
+  loadctlNotifyVictronSample();
 }
 
 long victronGetDataAge()

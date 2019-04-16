@@ -81,10 +81,10 @@ struct {
   e_ft type;
   long value;
 } eeprom_fields[] = {
-   {FT_UINT32, 25000L}  // discharge (load) turn-off, 25 volts
-  ,{FT_UINT32, 25100L}  // discharge (load) turn-on, 25.1 volts
+   {FT_UINT32, 24500L}  // discharge (load) turn-off, 25 volts
+  ,{FT_UINT32, 25750L}  // discharge (load) turn-on, 25.1 volts
   ,{FT_TIME, 23*3600L}  // time to start measurement of discharge curve, 2300h
-  ,{FT_TIME, 03*3600L}  // time to end measurement of discharge curve, 0300h
+  ,{FT_TIME, 05*3600L}  // time to end measurement of discharge curve, 0300h
   ,{FT_TIME, 06*3600L}  // start of daytime mode (seconds since midnight)
   ,{FT_TIME, 18*3600L}  // end of daytime mode   (seconds since midnight)
   ,{FT_UINT32, 48L}     // minimum calculated hours of reserve to run during the day

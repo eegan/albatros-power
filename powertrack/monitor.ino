@@ -25,6 +25,8 @@ char helpstring[] =
       "ls                   - list SD card root files" CRLF
       "dmp filename         - dump contents of specified file" CRLF
       "era filename         - erase specified file" CRLF
+      "reset                - jump to address zero" CRLF
+      "reinit               - reread variables from EEPROM" CRLF
       ;
       
 /////////////////////////////////////////////////////////////////////////////////////
@@ -55,11 +57,11 @@ void monitorInit2() {
 void monitorLoopHandler() {
   char mon_buf[LINE_BUF_LEN];
   char *command, *arg1, *arg2;
-  char c;
+  char c, lastValidc;
   
   while (EOF != (c = monitorPort.read())) {
-
 //    debug.print(c,16); debug.print(" ");  
+    lastValidc = c;
 
     if ('\b' == c || 0x7f == c) { // backspace or rubout
       if (0 != inbufpos) {
@@ -68,7 +70,7 @@ void monitorLoopHandler() {
       }
     }
     else {
-      if (inbufpos+1 < LINE_BUF_LEN) {
+      if (inbufpos < LINE_BUF_LEN-1) {
         mon_buf[inbufpos++] = c;
         monitorPort.print(c);
       }
@@ -81,7 +83,10 @@ void monitorLoopHandler() {
 
   // If the last character was CR, we're done; replace it with null
   // Else quit and come back later
-  if ('\r' == mon_buf[inbufpos-1])
+
+  // This hack lets you enter a line that is filled with gibberish so you don't think the monitor is dead after this is done
+//  if ('\r' == mon_buf[inbufpos-1])
+  if ('\r' == lastValidc)
     mon_buf[inbufpos-1] = 0;
   else
     return;
@@ -148,8 +153,15 @@ void monitorLoopHandler() {
   else if (0 == strcmp(command, "era")) {  
     monitorPort.println(arg1);
     loggerEraseFile(monitorPort, arg1);
+  }
+  else if (0 == strcmp(command, "reset")) {
+    (*(void (*)())(0))();
+  }
+  else if (0 == strcmp(command, "reinit")) {
+    cfgInit();
   }  
   else {
       monitorPort.print(helpstring);
   } 
 }
+
