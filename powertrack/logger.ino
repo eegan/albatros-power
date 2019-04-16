@@ -288,9 +288,20 @@ void statusLogPrint(char *string, bool flag)
   const int buflen = 100;
   char buf[buflen];
 
-  sprintf(buf, "%19s %50s = %5s", rtcPresentTime(), string, flag? "TRUE" : "FALSE");
+  sprintf(buf, "%19s %30s = %5s", rtcPresentTime(), string, flag? "TRUE" : "FALSE");
 
   statuslogWriteLine(buf);
+}
+
+// This one is for logging commands
+void statusLogPrint(char *string)
+{
+  const int buflen = 100;
+  char buf[buflen];
+
+  sprintf(buf, "%19s %50s", rtcPresentTime(), string);
+
+  statuslogWriteLine(buf, false);
 }
 
 void statusLogPrint(char *string, long l)
@@ -320,11 +331,11 @@ void statusLogPrint(char *string, double d)
 // statusLogWriteLine
 // write a line in the status log
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void statuslogWriteLine(char *string)
+void statuslogWriteLine(char *string, bool echo)
 {
   char logFileName[13]; // 8.3 + null  
   
-  monitorPort.println(string);
+  if (echo) monitorPort.println(string);
 
   // Format filename based on month
   sprintf(logFileName, "%04d%02d.log", rtcYear(), rtcMonth(), rtcDay());
@@ -342,3 +353,13 @@ void statuslogWriteLine(char *string)
     f.close();
   }  
 }
+
+//void statuslogWriteLine(char *string)
+//{
+//  statuslogWriteLine(string, true);
+//}
+//
+//void loggerLogCommand(char *string)
+//{
+//  statuslogWriteLine(string, false);
+//}

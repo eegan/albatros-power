@@ -50,6 +50,7 @@ void loop()
   monitorLoopHandler();
   loadctlLoopHandler();
   loggerLoopHandler();
+  statusLoopHandler();
 }
 
 #if PACE_SLEEP_MAIN_LOOP

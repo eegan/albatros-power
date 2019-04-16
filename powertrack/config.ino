@@ -65,17 +65,6 @@ enum e_fndx {
   ,ndx_maxVDataAge
 };
 
-// Arduino is broken
-// This enum declaration works (into a global scope) if it is here, but not if it is in victron.ino.
-// Please maintain them in both places, until we figure out what to do.
-// TODO: perhaps put them in a .h file
-enum victronFieldEnum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL, 
-      FI_ILOAD, FI_Relay, FI_H19,   FI_H20, FI_H21, 
-      FI_H22,   FI_H23,   FI_ERR,   FI_CS,  FI_FW, 
-      FI_PID, FI_SER, FI_HSDS, FI_MPPT, FI_Checksum,
-      FI_field_count
-};
-
 // The in-memory copy of the fields, with type tags
 struct {
   e_ft type;

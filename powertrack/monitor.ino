@@ -23,8 +23,8 @@ char helpstring[] =
       "rtc adj              - actually adjust RTC" CRLF
       "vs                   - Victron status, print out current Victron parameters" CRLF
       "ls                   - list SD card root files" CRLF
-      "dmp filename         - dump contents of specified file" CRLF
-      "era filename         - erase specified file" CRLF
+      "cat filename         - dump contents of specified file" CRLF
+      "rm filename          - remove specified file" CRLF
       "reset                - jump to address zero" CRLF
       "reinit               - reread variables from EEPROM" CRLF
       ;
@@ -56,6 +56,7 @@ void monitorInit2() {
 /////////////////////////////////////////////////////////////////////////////////////
 void monitorLoopHandler() {
   char mon_buf[LINE_BUF_LEN];
+  char mon_buf_copy[LINE_BUF_LEN]; // for logging
   char *command, *arg1, *arg2;
   char c, lastValidc;
   
@@ -96,6 +97,8 @@ void monitorLoopHandler() {
   monitorPort.print(mon_buf);
   monitorPort.println(">");
 
+  strcpy(mon_buf_copy, mon_buf);
+  
   // parse the line into ' ' separated arguments
   command = strtok(mon_buf, " ");
   arg1 = strtok(NULL, " ");
@@ -107,12 +110,15 @@ void monitorLoopHandler() {
     cfgDumpFieldValues(monitorPort);
   }
   else if (0 == strcmp(command, "inv")) {
+    statusLogPrint(mon_buf_copy);
     cfg_invalidateEE();
   }  
   else if (0 == strcmp(command, "com")) {
+    statusLogPrint(mon_buf_copy);    
     cfg_saveConfig();
   }
   else if (0 == strcmp(command, "set")) {
+    statusLogPrint(mon_buf_copy);
     cfg_set(arg1, arg2);
   }
   else if (0 == strcmp(command, "rtc")) {
@@ -125,15 +131,18 @@ void monitorLoopHandler() {
       monitorPort.print("setting date to: <");
       monitorPort.print(arg2);
       monitorPort.println(">");
+      statusLogPrint(mon_buf_copy);
       rtcSetDate(arg2);
     }
     else if (0 == strcmp(arg1, "time")) {  
       monitorPort.print("setting time to: <");
       monitorPort.print(arg2);
       monitorPort.println(">");
+      statusLogPrint(mon_buf_copy);
       rtcSetTime(arg2);
     }    
     else if (0 == strcmp(arg1, "adj")) {  
+      statusLogPrint(mon_buf_copy);
       monitorPort.println("adjusting rtc");
       rtcAdjust();
     }
@@ -146,18 +155,21 @@ void monitorLoopHandler() {
     monitorPort.println("SD card root files:");
     loggerRootDir(monitorPort);
   }    
-  else if (0 == strcmp(command, "dmp")) {  
+  else if (0 == strcmp(command, "cat")) {  
     monitorPort.println(arg1);
     loggerDumpFile(monitorPort, arg1);
   }  
-  else if (0 == strcmp(command, "era")) {  
+  else if (0 == strcmp(command, "rm")) {  
     monitorPort.println(arg1);
+    statusLogPrint(mon_buf_copy);
     loggerEraseFile(monitorPort, arg1);
   }
   else if (0 == strcmp(command, "reset")) {
+    statusLogPrint(mon_buf_copy);
     (*(void (*)())(0))();
   }
   else if (0 == strcmp(command, "reinit")) {
+    statusLogPrint(mon_buf_copy);
     cfgInit();
   }  
   else {

@@ -128,16 +128,16 @@ enum {FT_int, FT_ON_OFF, FT_bool, FT_string, FT_checksum};
 
 
 // Arduino is broken
-// This enum declaration works (into a global scope) if it is in config.ino, but not if they are here
+// This enum declaration works (into a global scope) if it is elsewhere but not if it is here
+// It is in powertrack.h
 // Please maintain them in both places, until we figure out what to do.
-// TODO: Perhaps put them in a .h file
-
 //enum victronFieldEnum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL, 
 //      FI_ILOAD, FI_Relay, FI_H19,   FI_H20, FI_H21, 
 //      FI_H22,   FI_H23,   FI_ERR,   FI_CS,  FI_FW, 
 //      FI_PID, FI_SER, FI_HSDS, FI_MPPT, FI_Checksum,
 //      FI_field_count
 //};
+
 
 struct fd fieldDescriptors[] = {
    {"V",      FI_V,     FT_int}   // main battery voltage (mV)
@@ -254,6 +254,7 @@ void ParsePacket()
         debug.print("=");
         debug.println(value);
         #endif;
+        
         break;
       default:
         ASSERT(0);

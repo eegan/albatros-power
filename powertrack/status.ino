@@ -2,6 +2,8 @@
 // Diagnostic status
 /////////////////////////////////////////////////////////////////////////////////////
 
+runTimer statusRunTimer(1* 1000L);  // run interval
+
 /////////////////////////////////////////////////////////////////////////////////////
 // statusInit
 // Init (called from main)
@@ -12,6 +14,12 @@ void statusInit()
     pinMode(redLEDPin, OUTPUT);
 }
 
+void statusLoopHandler()
+{
+  if (statusRunTimer.runNow())
+    ;
+
+}
 
 void reportStatus(int code, bool state)
 {
