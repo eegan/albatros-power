@@ -114,7 +114,7 @@ void victronLoopHandler()
 
 // Field table
 struct fd {
-  char *tag;  // the string we expect to see from the Victron
+  char const *tag;  // the string we expect to see from the Victron
   byte index; // an index into the result array
   byte type;  // Type enumeration  so we know what to expect and how to treat it 
   long value; // we will store the value in the array, once it's parsed, except for strings
@@ -178,8 +178,6 @@ void ParsePacket()
   byte fieldIndex;
   byte fieldType;
 
-  char c;
-
   // read until we see 'P' for PID field; there shouldn't be any in any hex data in between packets
   while (circbuf[cbout] != 'P')
     cb_nextchar();
@@ -198,7 +196,7 @@ void ParsePacket()
     
     // search for field tag
     fieldIndex = -1;
-    for (int i=0; i<COUNT_OF(fieldDescriptors); i++) {
+    for (UINT16 i=0; i<COUNT_OF(fieldDescriptors); i++) {
       if (0 == strcasecmp(buf, fieldDescriptors[i].tag)) {
         fieldIndex = fieldDescriptors[i].index;
         fieldType = fieldDescriptors[i].type;
@@ -253,7 +251,7 @@ void ParsePacket()
         debug.print(fieldDescriptors[fieldIndex].tag);
         debug.print("=");
         debug.println(value);
-        #endif;
+        #endif
         
         break;
       default:
@@ -296,7 +294,7 @@ void readElement(char &checksum, char terminator) {
 // TODO: add string fields (they have to also be stored ...)
 void victronDumpStatus(Stream &p)
 {
-  for (int i=0; i<FI_field_count; i++) {
+  for (UINT16 i=0; i<FI_field_count; i++) {
     if (fieldDescriptors[i].type != FT_string) 
     {
       p.print(fieldDescriptors[i].tag);

@@ -86,7 +86,7 @@ void paceLoop()
 #define ASSERT(x)
 #endif
 
-void assertfail(char *file, long line)
+void assertfail(char const *file, long line)
 {
   // TODO: something
   // like print a message on the debug port

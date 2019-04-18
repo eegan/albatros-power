@@ -74,7 +74,6 @@ void loggerRootDir (Stream &p)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void loggerDumpFile(Stream &p, char *filename)
 {
-  char buf[20];
   char c;
   File f = SD.open(filename);
   if (!f) {
@@ -109,7 +108,7 @@ enum logVarType {
 };
 
 struct {
-  char *name;       // name for CSV header
+  char const *name;       // name for CSV header
   int sourceIndex;  // index in Victron data array
   logVarType type;  // type
   long sum;         // accumulated sum or bitmap
@@ -132,7 +131,7 @@ struct {
 // receive notification of a new Victron sample
 void loggerNotifyVictronSample()
 {
-  for (int i=0; i< COUNT_OF(logVariables); i++) {
+  for (UINT16 i=0; i < COUNT_OF(logVariables); i++) {
     int ndx = logVariables[i].sourceIndex;
     
     // get the Victron data field, unless it's the load we are logging
@@ -169,20 +168,13 @@ char logFileName[13]; // 8.3 + null
 void loggerLogEntry() 
 {
   rtcReadTime();
-  // check if the day has changed and if so, format new filename
-  long day = rtcGetTime() / DAY_SECONDS;
-  
-//  monitorPort.println(day);
-//  monitorPort.println(logFilenameDay);
-//  monitorPort.println(newDay);
-
   // Format filename based on day
   sprintf(logFileName, "%04d%02d%02d.csv", rtcYear(), rtcMonth(), rtcDay());
   bool newDay = 0 == SD.exists(logFileName);
     
   // open the file
   File f = SD.open(logFileName, FILE_WRITE);
-  if (NULL == f) {
+  if (!f) {
     reportStatus(statusSDError, true);
     return;    
   }
@@ -193,7 +185,7 @@ void loggerLogEntry()
     
     f.print("Time, smpCount");
 
-    for (int i=0; i< COUNT_OF(logVariables); i++) {
+    for (UINT16 i=0; i< COUNT_OF(logVariables); i++) {
       f.print(", ");
       switch(logVariables[i].type) {
         case lvtNumeric:
@@ -219,7 +211,7 @@ void loggerLogEntry()
   f.print(sampleCount);
 
   // Write out the data line
-  for (int i=0; i< COUNT_OF(logVariables); i++) {
+  for (UINT16 i=0; i< COUNT_OF(logVariables); i++) {
 
     // Print the variables
     f.print(", ");
@@ -247,7 +239,7 @@ void loggerLogEntry()
 
 void loggerZeroVariables()
 {
-  for (int i=0; i<COUNT_OF(logVariables); i++) {
+  for (UINT16 i=0; i<COUNT_OF(logVariables); i++) {
     logVariables[i].sum = 0;
     logVariables[i].min = 0x7FFFFFFF;
     logVariables[i].max = 0x80000000;
@@ -268,7 +260,7 @@ void loggerZeroVariables()
 // statuslogCheckChange
 // Assign new value to old value, printing a log message (and returning true) if it is a change
 /////////////////////////////////////////////////////////////////////////////////////////////////
-bool statuslogCheckChange(char *string, bool newValue, bool &currentValue)
+bool statuslogCheckChange(char const *string, bool newValue, bool &currentValue)
 {
   bool changed = false;
   if (newValue != currentValue) {
@@ -283,7 +275,7 @@ bool statuslogCheckChange(char *string, bool newValue, bool &currentValue)
 // Status log print functions for strings, longs and floats
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // TODO: ugly unsafe literal buffer lengths
-void statusLogPrint(char *string, bool flag)
+void statusLogPrint(char const *string, bool flag)
 {
   const int buflen = 100;
   char buf[buflen];
@@ -294,7 +286,7 @@ void statusLogPrint(char *string, bool flag)
 }
 
 // This one is for logging commands
-void statusLogPrint(char *string)
+void statusLogPrint(char const *string)
 {
   const int buflen = 100;
   char buf[buflen];
@@ -304,7 +296,7 @@ void statusLogPrint(char *string)
   statuslogWriteLine(buf, false);
 }
 
-void statusLogPrint(char *string, long l)
+void statusLogPrint(char const *string, long l)
 {
   const int buflen = 100;
   char buf[buflen];
@@ -314,7 +306,7 @@ void statusLogPrint(char *string, long l)
   statuslogWriteLine(buf);
 }
 
-void statusLogPrint(char *string, double d)
+void statusLogPrint(char const *string, double d)
 {
   const int buflen = 100;
   char buf[buflen];
@@ -331,19 +323,18 @@ void statusLogPrint(char *string, double d)
 // statusLogWriteLine
 // write a line in the status log
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void statuslogWriteLine(char *string, bool echo)
+void statuslogWriteLine(char const *string, bool echo)
 {
   char logFileName[13]; // 8.3 + null  
   
   if (echo) monitorPort.println(string);
 
   // Format filename based on month
-  sprintf(logFileName, "%04d%02d.log", rtcYear(), rtcMonth(), rtcDay());
-  bool newDay = 0 == SD.exists(logFileName);
+  sprintf(logFileName, "%04d%02d.log", rtcYear(), rtcMonth());
     
   // open the file
   File f = SD.open(logFileName, FILE_WRITE);
-  if (NULL == f) {
+  if (!f) {
     reportStatus(statusSDError, true);
     return;    
   }
@@ -355,7 +346,7 @@ void statuslogWriteLine(char *string, bool echo)
 }
 
 // default echo to true for old callers
-void statuslogWriteLine(char *string)
+void statuslogWriteLine(char const *string)
 {
   statuslogWriteLine(string, true);
 }

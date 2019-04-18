@@ -55,7 +55,7 @@ void loadctlLoopHandler()
       bool aboveOnThreshold  = bat > cfg_fieldValue(ndx_vbatOnThresholdMv);
 
       // hysteresis logic
-      bool newLVCutoff = !aboveOffThreshold | !aboveOnThreshold & lowVoltageCutoff;
+      bool newLVCutoff = !aboveOffThreshold || ( !aboveOnThreshold && lowVoltageCutoff );
       char buf[25];
       strcpy(buf, "LV cutoff ");
       ltoa(bat, buf+strlen(buf),  10);

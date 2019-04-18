@@ -122,7 +122,7 @@ void monitorLoopHandler() {
     cfg_set(arg1, arg2);
   }
   else if (0 == strcmp(command, "rtc")) {
-    if (NULL == *arg1) {  // no arguments - display time
+    if ('\0' == *arg1) {  // no arguments - display time
       //present = rtc.now().unixtime();   // I really think we will want YYYY/MM/DD HH:MM:SS
       monitorPort.print("current time: ");
       monitorPort.println(rtcPresentTime());
@@ -176,4 +176,3 @@ void monitorLoopHandler() {
       monitorPort.print(helpstring);
   } 
 }
-

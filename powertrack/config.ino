@@ -83,7 +83,7 @@ struct {
 };
 
 // Field names
-char *fieldNames[] = 
+char const *fieldNames[] = 
 {
     "VBAT_TURNOFF_MV"
   , "VBAT_TURNON_MV"
@@ -180,7 +180,7 @@ void cfgDumpFieldValues(Stream &p) {
   p.write("Configuration level:   "); p.println(cfg.validation.cfg_level, 10);
   p.write("Newly initialized:     "); p.println(configNew, 10);
 
-  for (int i=0; i<COUNT_OF(eeprom_fields); i++)
+  for (UINT16 i=0; i<COUNT_OF(eeprom_fields); i++)
   {
     char buf[30];
     sprintf(buf, "%d - %s  =  %s", i, fieldNames[i], fieldValueString(i));
