@@ -27,6 +27,13 @@ char helpstring[] =
       "rm filename          - remove specified file" CRLF
       "reset                - jump to address zero" CRLF
       "reinit               - reread variables from EEPROM" CRLF
+      "status               - dump system status" CRLF
+      "clear code           - clear specified status code" CRLF
+      "clear *              - clear all status codes" CRLF
+      "latch code           - set code as latching" CRLF
+      "unlatch code         - set code as non-latching" CRLF
+      "block code           - set code as blocked" CRLF
+      "unblock code         - set code as unblocked" CRLF
       ;
       
 /////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +178,30 @@ void monitorLoopHandler() {
   else if (0 == strcmp(command, "reinit")) {
     statusLogPrint(mon_buf_copy);
     cfgInit();
-  }  
+  }
+  else if (0 == strcmp(command, "status")) {
+    statusDumpStatus(monitorPort);
+  }
+  else if (0 == strcmp(command, "clear")) {
+    if ('*' == *arg1)
+      statusClearAll();
+    else
+      statusClear(atoi(arg1));
+  }
+  
+  else if (0 == strcmp(command, "latch")) {
+    statusSetLatching(atoi(arg1), true);
+  }
+  else if (0 == strcmp(command, "unlatch")) {
+    statusSetLatching(atoi(arg1), false);
+  }
+  else if (0 == strcmp(command, "block")) {
+    statusSetBlocked(atoi(arg1), true);    
+  }
+  else if (0 == strcmp(command, "unblock")) {
+    statusSetBlocked(atoi(arg1), false);        
+  }
+  
   else {
       monitorPort.print(helpstring);
   } 

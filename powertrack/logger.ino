@@ -104,7 +104,7 @@ enum logVarType {
   lvtNumeric      // numeric value, will accumulate averaged/min/max
  ,lvtEnumSample   // enum value, will sample current value
  ,lvtEnumAccum    // enum value, will accumulate bitmap of values seen in log entry interval
- ,lvtLoad         // special case: read the load state
+// ,lvtLoad         // special case: read the load state
 };
 
 struct {
@@ -175,7 +175,7 @@ void loggerLogEntry()
   // open the file
   File f = SD.open(logFileName, FILE_WRITE);
   if (!f) {
-    reportStatus(statusSDError, true);
+    statusReportStatus(statusSDAccessError, true);
     return;    
   }
   
@@ -335,7 +335,7 @@ void statuslogWriteLine(char const *string, bool echo)
   // open the file
   File f = SD.open(logFileName, FILE_WRITE);
   if (!f) {
-    reportStatus(statusSDError, true);
+    statusReportStatus(statusSDAccessError, true);
     return;    
   }
 

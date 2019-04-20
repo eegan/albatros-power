@@ -164,7 +164,7 @@ void cfg_invalidateEE() {
 // save configuration from memory to EEPROM
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void cfg_saveConfig() {
-    UINT16 i;
+    uint16_t i;
     for (i=0; i<sizeof cfg; i++)
       EEPROM.write(CONFIG_START + i, *((char*)&cfg + i));
     for (i=0; i<sizeof eeprom_fields; i++)
@@ -180,7 +180,7 @@ void cfgDumpFieldValues(Stream &p) {
   p.write("Configuration level:   "); p.println(cfg.validation.cfg_level, 10);
   p.write("Newly initialized:     "); p.println(configNew, 10);
 
-  for (UINT16 i=0; i<COUNT_OF(eeprom_fields); i++)
+  for (uint16_t i=0; i<COUNT_OF(eeprom_fields); i++)
   {
     char buf[30];
     sprintf(buf, "%d - %s  =  %s", i, fieldNames[i], fieldValueString(i));
@@ -255,6 +255,7 @@ char *fieldValueString(int ndx)
   long v = eeprom_fields[ndx].value;
   switch(eeprom_fields[ndx].type) {
     case FT_UINT32:
+    case FT_INT32:
       ltoa(v, buf, 10);
       break;
     case FT_TIME:
@@ -273,6 +274,7 @@ long parseValue(int ndx, char *str)
   int h=0, m=0, s=0;
   switch(eeprom_fields[ndx].type) {
     case FT_UINT32:
+    case FT_INT32:
       v = atol(str);
       break;
     case FT_TIME:

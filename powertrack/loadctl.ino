@@ -60,7 +60,7 @@ void loadctlLoopHandler()
       strcpy(buf, "LV cutoff ");
       ltoa(bat, buf+strlen(buf),  10);
       statuslogCheckChange(buf, newLVCutoff, lowVoltageCutoff);
-      reportStatus(statusBatteryLowError, lowVoltageCutoff);
+      statusReportStatus(statusBatteryLowError, lowVoltageCutoff);
     }
 
     // TODO: test data age by setting it smallish and unplugging the Victron data
@@ -69,7 +69,7 @@ void loadctlLoopHandler()
     // See if it's been too long since we got a data packet from the Victron
     bool newDataAgeCutoff = victronGetDataAge() > cfg_fieldValue(ndx_maxVDataAge);
     statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff);
-    reportStatus(statusVictronTimeoutError, dataAgeCutoff);
+    statusReportStatus(statusVictronTimeoutError, dataAgeCutoff);
 
     // See if the voltage measurement flag changes
     bool newMeasureTime = betweenTimes(timeOfDay, cfg_fieldValue(ndx_measureStart), cfg_fieldValue(ndx_measureEnd));  
