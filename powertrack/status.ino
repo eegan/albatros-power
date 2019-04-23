@@ -26,11 +26,12 @@ struct {
 }
 status[] = 
 {
+//  name                    value  block  latch
    {"SD Card Access error", false, false, true}
   ,{"Victron data timeout", false, false, true}
-  ,{"Victron error state" , false, false, true}
-  ,{"Battery voltage low" , false, false, true}
-  ,{"RTC access error"    , false, false, true}
+  ,{"Victron error state ", false, false, true}
+  ,{"Battery voltage low ", false, false, true}
+  ,{"RTC access error    ", false, false, true}
   
 }
 ;
@@ -99,10 +100,8 @@ void statusDumpStatus(Stream &p) {
 // LED interface code
 /////////////////////////////////////////////////////////////////////////////////////
 bool statusLoadOn = false;            // local copy of load on, as indicated by notification
-bool errorStatus = false;             // indicates error alert state
 int blinkState = 0;
 const int maxBlinkState = 20;
-
 
 void statusNotifyLoad(bool on)
 {
@@ -115,6 +114,8 @@ void statusLoopHandler()
     bool errorState = false;
     for (uint16_t i = 0; i< COUNT_OF(status); i++)
       errorState |= status[i].value;    
+
+    debug.println(errorState);
     
     blinkState++;
     if (blinkState > maxBlinkState) blinkState = 0;
@@ -123,13 +124,13 @@ void statusLoopHandler()
     bool greenOn, redOn;
     if (!LEDBlink)  // most of the time
     {
-      greenOn = statusLoadOn && !errorStatus;
-      redOn   = statusLoadOn &&  errorStatus;
+      greenOn = statusLoadOn && !errorState;
+      redOn   = statusLoadOn &&  errorState;
     }
     else            // during a short blink
     {
-      greenOn = statusLoadOn || !errorStatus;
-      redOn   = statusLoadOn ||  errorStatus;
+      greenOn = statusLoadOn || !errorState;
+      redOn   = statusLoadOn ||  errorState;
     }
     
     digitalWrite(greenLEDPin, greenOn);

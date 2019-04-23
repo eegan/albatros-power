@@ -27,7 +27,7 @@ char helpstring[] =
       "rm filename          - remove specified file" CRLF
       "reset                - jump to address zero" CRLF
       "reinit               - reread variables from EEPROM" CRLF
-      "status               - dump system status" CRLF
+      "status               - dump system status (including codes)" CRLF
       "clear code           - clear specified status code" CRLF
       "clear *              - clear all status codes" CRLF
       "latch code           - set code as latching" CRLF
