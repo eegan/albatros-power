@@ -169,7 +169,7 @@ void loggerLogEntry()
 {
   rtcReadTime();
   // Format filename based on day
-  sprintf(logFileName, "%04d%02d%02d.csv", rtcYear(), rtcMonth(), rtcDay());
+  snprintf(logFileName, sizeof logFileName, "%04d%02d%02d.csv", rtcYear(), rtcMonth(), rtcDay());
   bool newDay = 0 == SD.exists(logFileName);
     
   // open the file
@@ -280,7 +280,7 @@ void statusLogPrint(char const *string, bool flag)
   const int buflen = 100;
   char buf[buflen];
 
-  sprintf(buf, "%19s %30s = %5s", rtcPresentTime(), string, flag? "TRUE" : "FALSE");
+  snprintf(buf, sizeof buf, "%19s %30s = %5s", rtcPresentTime(), string, flag? "TRUE" : "FALSE");
 
   statuslogWriteLine(buf);
 }
@@ -291,7 +291,7 @@ void statusLogPrint(char const *string)
   const int buflen = 100;
   char buf[buflen];
 
-  sprintf(buf, "%19s %50s", rtcPresentTime(), string);
+  snprintf(buf, sizeof buf, "%19s %50s", rtcPresentTime(), string);
 
   statuslogWriteLine(buf, false);
 }
@@ -301,7 +301,7 @@ void statusLogPrint(char const *string, long l)
   const int buflen = 100;
   char buf[buflen];
 
-  sprintf(buf, "%19s %50s = %ld", rtcPresentTime(), string, l);
+  snprintf(buf, sizeof buf, "%19s %50s = %ld", rtcPresentTime(), string, l);
 
   statuslogWriteLine(buf);
 }
@@ -314,7 +314,7 @@ void statusLogPrint(char const *string, double d)
 
   dtostrf(d, 7, 3, bufd);
 
-  sprintf(buf, "%19s %50s = %s", rtcPresentTime(), string, bufd);
+  snprintf(buf, sizeof buf, "%19s %50s = %s", rtcPresentTime(), string, bufd);
 
   statuslogWriteLine(buf);
 }
@@ -330,7 +330,7 @@ void statuslogWriteLine(char const *string, bool echo)
   if (echo) monitorPort.println(string);
 
   // Format filename based on month
-  sprintf(logFileName, "%04d%02d.log", rtcYear(), rtcMonth());
+  snprintf(logFileName, sizeof logFileName, "%04d%02d.log", rtcYear(), rtcMonth());
     
   // open the file
   File f = SD.open(logFileName, FILE_WRITE);

@@ -57,8 +57,7 @@ void loadctlLoopHandler()
       // hysteresis logic
       bool newLVCutoff = !aboveOffThreshold || ( !aboveOnThreshold && lowVoltageCutoff );
       char buf[25];
-      strcpy(buf, "LV cutoff ");
-      ltoa(bat, buf+strlen(buf),  10);
+	  snprintf(buf, sizeof buf, "LV cutoff %d", bat);
       statuslogCheckChange(buf, newLVCutoff, lowVoltageCutoff);
       statusReportStatus(statusBatteryLowError, lowVoltageCutoff);
     }
@@ -105,7 +104,7 @@ void loadctlLoopHandler()
     }
     
     // See if it's daytime
-    bool newDaytime = betweenTimes(timeOfDay, cfg_fieldValue(ndx_dayStart), cfg_fieldValue(ndx_dayEnd));    
+    bool newDaytime = betweenTimes(timeOfDay, cfg_fieldValue(ndx_dayStart), cfg_fieldValue(ndx_dayEnd));
     statuslogCheckChange("daytime", newDaytime, daytime);
 
     

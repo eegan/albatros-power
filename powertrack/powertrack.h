@@ -37,8 +37,7 @@ enum victronFieldEnum {FI_V,     FI_VPV,   FI_PPV,   FI_I,   FI_IL,
 };
 
 // Status codes
-enum { statusSDAccessError, statusVictronTimeoutError, statusBatteryLowError, statusRTCAccessError, statusNErrors };
-
+enum { statusSDAccessError, statusVictronTimeoutError, statusVictronErrorState, statusBatteryLowError, statusRTCAccessError, statusNErrors };
 
 class runTimer
 {

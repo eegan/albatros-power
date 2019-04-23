@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Diagnostic status
 /////////////////////////////////////////////////////////////////////////////////////
-
+#include "powertrack.h"
 runTimer statusRunTimer(50);  // run interval
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@ struct {
   bool blocked;
   bool latching;
 }
-status[] = 
+status[statusNErrors] = 
 {
 //  name                    value  block  latch
    {"SD Card Access error", false, false, true}
@@ -33,18 +33,13 @@ status[] =
   ,{"Battery voltage low ", false, false, true}
   ,{"RTC access error    ", false, false, true}
   
-}
-;
-
-
+};
 
 void statusReportStatus(uint16_t code, bool conditionTrue)
 {
   if (code >= COUNT_OF(status)) return;
   if ( conditionTrue ) {
-    // reporting true
-    if ( ! status[code].blocked )
-      status[code].value = true;
+    status[code].value = true;
   }
   else {
     // reporting false
@@ -64,7 +59,6 @@ void statusSetBlocked(uint16_t code, bool state)
 {
   if (code >= COUNT_OF(status)) return;  
   status[code].blocked = state;
-  if (state) status[code].value = false;
 }
 
 void statusClear(uint16_t code)
@@ -83,8 +77,8 @@ void statusDumpStatus(Stream &p) {
 
   for (uint16_t i=0; i<COUNT_OF(status); i++)
   {
-    char buf[50];
-    sprintf(buf, "%d - %s  =  %s, %s, %s", 
+    char buf[60];
+    snprintf(buf, sizeof buf, "%d - %s  =  %s, %s, %s", 
         i 
       , status[i].name 
       , status[i].value    ? "ACTIVE"  : "inactv"
@@ -113,7 +107,7 @@ void statusLoopHandler()
   if (statusRunTimer.runNow()) {  
     bool errorState = false;
     for (uint16_t i = 0; i< COUNT_OF(status); i++)
-      errorState |= status[i].value;    
+      errorState |= status[i].value && !status[i].blocked;    
 
     blinkState++;
     if (blinkState > maxBlinkState) blinkState = 0;
@@ -134,5 +128,10 @@ void statusLoopHandler()
     digitalWrite(greenLEDPin, greenOn);
     digitalWrite(redLEDPin,   redOn);
   }
+}
 
+void statusNotifyVictronSample()
+{
+  // check for error status
+  statusReportStatus(statusVictronErrorState, victronGetFieldValue(FI_ERR));
 }

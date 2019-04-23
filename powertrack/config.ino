@@ -79,7 +79,7 @@ struct {
   ,{FT_UINT32, 48L}     // minimum calculated hours of reserve to run during the day
   ,{FT_UINT32, 36360L}  // uV / hour nominal discharge rate (220Ah, 50% discharge, 2V span, 2A load)
   ,{FT_UINT32, 60}      // seconds between log entries
-  ,{FT_UINT32, 1000}    // maximum seconds between victron data packets, before load turned off
+  ,{FT_UINT32, 300}     // maximum seconds between victron data packets (timeout) before load turned off
 };
 
 // Field names
@@ -92,7 +92,7 @@ char const *fieldNames[] =
   , "DAY_START"
   , "DAY_END"
   , "HOURS_RESERVE"
-  , "SLOPE_UV_PER_HOUR"
+  , "SLOPE_UV_PER_HOUR (NOT USED)"
   , "SECS_PER_LOG"
   , "MAX_VIC_DATA_AGE"
 };
@@ -182,8 +182,8 @@ void cfgDumpFieldValues(Stream &p) {
 
   for (uint16_t i=0; i<COUNT_OF(eeprom_fields); i++)
   {
-    char buf[30];
-    sprintf(buf, "%d - %s  =  %s", i, fieldNames[i], fieldValueString(i));
+    char buf[50];
+    snprintf(buf, sizeof buf, "%d - %s = %s", i, fieldNames[i], fieldValueString(i));
     p.println(buf);
   }
 }
@@ -259,7 +259,7 @@ char *fieldValueString(int ndx)
       ltoa(v, buf, 10);
       break;
     case FT_TIME:
-      sprintf(buf, "%02ld:%02ld:%02ld", v/3600L, (v%3600L)/60L, v%60L);
+      snprintf(buf, sizeof buf, "%02ld:%02ld:%02ld", v/3600L, (v%3600L)/60L, v%60L);
       break;
   }
   return buf;

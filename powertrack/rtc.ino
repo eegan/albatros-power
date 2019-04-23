@@ -75,7 +75,7 @@ char *rtcPresentTime()
 {
   static char buf[20] = (__TIME__);
   rtcReadTime();
-  sprintf(buf,"%04d/%02d/%02d %02d:%02d:%02d", 
+  snprintf(buf, sizeof buf,"%04d/%02d/%02d %02d:%02d:%02d", 
     now.year(), now.month(), now.day(),
     now.hour(), now.minute(), now.second() );
   return buf;
