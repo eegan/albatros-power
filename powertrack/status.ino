@@ -115,8 +115,6 @@ void statusLoopHandler()
     for (uint16_t i = 0; i< COUNT_OF(status); i++)
       errorState |= status[i].value;    
 
-    debug.println(errorState);
-    
     blinkState++;
     if (blinkState > maxBlinkState) blinkState = 0;
     bool LEDBlink = 0 == blinkState;
