@@ -117,7 +117,7 @@ struct {
 } logVariables[] = 
 
 {
-    {"BatVolt", FI_V,   lvtNumeric}  
+   {"BatVolt", FI_V,   lvtNumeric}  
   ,{"PVVolt",   FI_VPV, lvtNumeric}  
   ,{"PVPwr",    FI_PPV, lvtNumeric}
   ,{"BatCur",   FI_I,   lvtNumeric}
@@ -271,10 +271,19 @@ bool statuslogCheckChange(char const *string, bool newValue, bool &currentValue)
   return changed;
 }
 
+bool statuslogCheckChange(char const *string, bool newValue, bool &currentValue, uint32_t a, uint32_t b)
+{
+  bool changed = false;
+  if (newValue != currentValue) {
+    currentValue = newValue;    
+    changed = true;
+    statusLogPrint(string, newValue, a, b);
+  }
+  return changed;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Status log print functions for strings, longs and floats
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// TODO: ugly unsafe literal buffer lengths
 void statusLogPrint(char const *string, bool flag)
 {
   const int buflen = 100;
@@ -285,6 +294,15 @@ void statusLogPrint(char const *string, bool flag)
   statuslogWriteLine(buf);
 }
 
+void statusLogPrint(char const *string, bool flag, uint32_t a, uint32_t b)
+{
+  const int buflen = 100;
+  char buf[buflen];
+
+  snprintf(buf, sizeof buf, "%19s %30s = %5s %ld %ld", rtcPresentTime(), string, flag? "TRUE" : "FALSE", a, b);
+
+  statuslogWriteLine(buf);
+}
 // This one is for logging commands
 void statusLogPrint(char const *string)
 {
@@ -321,7 +339,7 @@ void statusLogPrint(char const *string, double d)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // statusLogWriteLine
-// write a line in the status log
+// write a line in the status log as well as to the monitor if called for
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void statuslogWriteLine(char const *string, bool echo)
 {

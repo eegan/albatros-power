@@ -52,6 +52,7 @@ void monitorInit() {
 void monitorInit2() {
   statuslogWriteLine("ALBATROS power system v 1.0");
   statuslogWriteLine(rtcPresentTime());
+  statuslogWriteLine("Compile date: "  __DATE__ " time: " __TIME__);  
   monitorPort.println("Serial monitor - commands:");
   monitorPort.print(helpstring);
   inbufpos = 0;
@@ -205,4 +206,22 @@ void monitorLoopHandler() {
   else {
       monitorPort.print(helpstring);
   } 
+}
+
+void checkvalues(int32_t later, int32_t earlier, char const *file, uint16_t line)
+{
+  HardwareSerial &p = monitorPort;
+	int32_t diff = later - earlier;
+	if (diff < 0) 
+	{
+    p.print(rtcPresentTime());
+		p.print(" Checkvalues: "); 
+		p.print(file); p.print(" "); 
+		p.print(line); p.print(" ");
+		p.print(later, 16); p.print(" ");
+		p.print(earlier, 16); p.print(" ");
+		p.print(diff, 16); p.print(" ");
+//    p.print(diff < 0? "ABNORMAL" : "NORMAL");
+    p.println();
+	}
 }

@@ -57,7 +57,7 @@ void loadctlLoopHandler()
       // hysteresis logic
       bool newLVCutoff = !aboveOffThreshold || ( !aboveOnThreshold && lowVoltageCutoff );
       char buf[25];
-	  snprintf(buf, sizeof buf, "LV cutoff %d", bat);
+      snprintf(buf, sizeof buf, "LV cutoff %d", bat);
       statuslogCheckChange(buf, newLVCutoff, lowVoltageCutoff);
       statusReportStatus(statusBatteryLowError, lowVoltageCutoff);
     }
@@ -66,8 +66,10 @@ void loadctlLoopHandler()
     // TODO: test the daytime code (mostly done)
 
     // See if it's been too long since we got a data packet from the Victron
-    bool newDataAgeCutoff = victronGetDataAge() > cfg_fieldValue(ndx_maxVDataAge);
-    statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff);
+    uint32_t v, c;
+    
+    bool newDataAgeCutoff = (v = victronGetDataAge()) > (c = cfg_fieldValue(ndx_maxVDataAge));
+    statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff, v, c);
     statusReportStatus(statusVictronTimeoutError, dataAgeCutoff);
 
     // See if the voltage measurement flag changes

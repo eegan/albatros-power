@@ -35,9 +35,24 @@ void setup()
   victronInit();
   // commented out since it re-inits the serial port also used for monitor; TODO implement a flag here
   loggerInit();
+  
   monitorInit2(); // after RTC and logger init
   loadctlInit();
   statusInit();
+
+  CHECKVALUES(5, 6);
+
+  CHECKVALUES(6, 5);
+
+//  CHECKVALUES(5+3, 5);
+//
+//  CHECKVALUES(0x7ffffffe, (0x7ffffffe + 1000));
+//  CHECKVALUES((0x7ffffffe + 1000), 0x7ffffffe);
+//  
+//  CHECKVALUES(0xfffffffe, (0xfffffffe + 1000));
+//  CHECKVALUES((0xfffffffe + 1000), 0xfffffffe);
+//  
+
 }
 
 void loop()

@@ -6,6 +6,9 @@
 #ifndef POWERTRACK_H
 #define POWERTRACK_H
 
+#define CHECKVALUES(later, earlier) checkvalues(later, earlier, __FILE__, __LINE__)
+void checkvalues(int32_t later, int32_t earlier, char const *file, uint16_t line);
+
 typedef unsigned long UINT32;
 typedef unsigned short UINT16;
 typedef long INT32;
@@ -61,8 +64,9 @@ void runTimer::reinit()
 
 bool runTimer::runNow()
 {
-  long m;
-  if ((m = millis()) - lastRun >= interval) {
+  long m = millis();
+  CHECKVALUES(m, lastRun);
+  if (m - lastRun >= interval) {
     lastRun = m;
     return true;
   }

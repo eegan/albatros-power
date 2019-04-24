@@ -21,7 +21,7 @@ void victronInit()
   victronData.begin(19200);  // Victron baud rate
   victronData.setTimeout(0); // this apparently works to set infinite timeout which is what we want
   
-  victronLastSampleTime = millis() / 1000;
+  victronLastSampleTime = millis() / 1000L;
   
   initbuffers();
 }
@@ -245,7 +245,7 @@ void ParsePacket()
         #endif
         value = checksum;
         victronSampleReceived = true; // flag that we've seen a packet (ever)
-        victronLastSampleTime = millis() / 1000;
+        victronLastSampleTime = millis() / 1000L;
         victronUpdateNotify();
         break;
       case FT_string:
@@ -315,7 +315,9 @@ void victronUpdateNotify()
 
 long victronGetDataAge()
 {
-  return millis()/1000 - victronLastSampleTime;
+  uint32_t m = millis() / 1000L;
+  CHECKVALUES(m, victronLastSampleTime);
+  return m - victronLastSampleTime;
 }
 
 bool victronSampleSeen()
