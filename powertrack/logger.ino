@@ -334,9 +334,11 @@ void statusLogPrint(char const *string, double d)
 {
   const int buflen = 100;
   char buf[buflen];
+  // char dummy[30];
   char bufd[30];  // buffer for number
+  // char dummy[30];
 
-  if (abs(d) > 1e24)
+  if (abs(d) > 1e0)
     strcpy(bufd, "*****");
   else
     dtostrf(d, 7, 5, bufd);

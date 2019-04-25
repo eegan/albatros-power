@@ -44,10 +44,21 @@ void setup()
 
   CHECKVALUES(6, 5);
   
-  statusLogPrint("Testing number magnitude", 9999999999999999999999.999);
+  // these two lines are sufficient
   statusLogPrint("Testing number magnitude", 99999999999999999999999.999);
   statusLogPrint("Testing number magnitude", 999999999999999999999999.999);
-  statusLogPrint("Testing number magnitude", 9999999999999999999999999.999);
+  
+  // statusLogPrint("Testing number magnitude", 9.999);
+  // statusLogPrint("Testing number magnitude", 9.999);
+  
+  // 1000000000000000000000000.000
+  
+  // statusLogPrint("Testing number magnitude", 9999999999999999999999999.999);
+  // statusLogPrint("Testing number magnitude", 99999999999999999999999999.999);
+  // statusLogPrint("Testing number magnitude", 99999999999999999999999.999);
+  // statusLogPrint("Testing number magnitude", 999999999999999999999999.999);
+  // statusLogPrint("Testing number magnitude", 9999999999999999999999999.999);
+  // statusLogPrint("Testing number magnitude", 99999999999999999999999999.999);
 
   //  CHECKVALUES(5+3, 5);
 //
