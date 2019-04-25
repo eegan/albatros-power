@@ -72,7 +72,7 @@ void loggerRootDir (Stream &p)
 // loggerDumpFile
 // dump contents of specified file, to port p
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerDumpFile(Stream &p, char *filename)
+void loggerDumpFile(Stream &p, const char *filename)
 {
   char c;
   File f = SD.open(filename);
@@ -95,7 +95,7 @@ void loggerDumpFile(Stream &p, char *filename)
 // loggerEraseFile
 // erase specified file
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerEraseFile (Stream &p, char *filename)
+void loggerEraseFile (Stream &p, const char *filename)
 {
   SD.remove(filename);
 }
@@ -117,7 +117,7 @@ struct {
 } logVariables[] = 
 
 {
-    {"BatVolt", FI_V,   lvtNumeric}  
+   {"BatVolt", FI_V,   lvtNumeric}  
   ,{"PVVolt",   FI_VPV, lvtNumeric}  
   ,{"PVPwr",    FI_PPV, lvtNumeric}
   ,{"BatCur",   FI_I,   lvtNumeric}
@@ -164,7 +164,7 @@ void loggerNotifyVictronSample()
 // Open the file and write a line from the log
 // Reset the log variables
 /////////////////////////////////////////////////////////////////////////////////////////////////
-char logFileName[15]; // 8.3 + null + 2 for good luck
+char logFileName[13]; // 8.3 + null
 void loggerLogEntry() 
 {
   rtcReadTime();
@@ -291,44 +291,46 @@ void statusLogPrint(char const *string)
   const int buflen = 100;
   char buf[buflen];
 
-  snprintf(buf, sizeof buf, "%19s %50s", rtcPresentTime(), string);
+  snprintf(buf, sizeof buf, "%19s %30s", rtcPresentTime(), string);
 
   statuslogWriteLine(buf, false);
 }
 
+// for long
 void statusLogPrint(char const *string, long l)
 {
   const int buflen = 100;
   char buf[buflen];
 
-  snprintf(buf, sizeof buf, "%19s %50s = %ld", rtcPresentTime(), string, l);
+  snprintf(buf, sizeof buf, "%19s %30s = %ld", rtcPresentTime(), string, l);
 
   statuslogWriteLine(buf);
 }
 
+// for double value
 void statusLogPrint(char const *string, double d)
 {
   const int buflen = 100;
   char buf[buflen];
-  char bufd[50];  // buffer for number
-  
-  if (abs(d) > 1e30)  // should be lots of margin
-    strcpy(bufd, "**********");
-  else
-    dtostrf(d, 7, 3, bufd);
+  char bufd[30];  // buffer for number
 
-  snprintf(buf, sizeof buf, "%19s %50s = %s", rtcPresentTime(), string, bufd);
+  if (abs(d) > 1e15) // lots of margin I hope
+    strcpy(bufd, "*****");
+  else
+    dtostrf(d, 7, 5, bufd);
+
+  snprintf(buf, sizeof buf, "%19s %30s = %s", rtcPresentTime(), string, bufd);
 
   statuslogWriteLine(buf);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // statusLogWriteLine
-// write a line in the status log
+// write a line in the status log as well as to the monitor if called for
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void statuslogWriteLine(char const *string, bool echo)
 {
-  char logFileName[15]; // 8.3 + null + 2 for good luck
+  char logFileName[13]; // 8.3 + null  
   
   if (echo) monitorPort.println(string);
 

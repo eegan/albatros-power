@@ -57,7 +57,7 @@ void loadctlLoopHandler()
       // hysteresis logic
       bool newLVCutoff = !aboveOffThreshold || ( !aboveOnThreshold && lowVoltageCutoff );
       char buf[25];
-	  snprintf(buf, sizeof buf, "LV cutoff %d", bat);
+      snprintf(buf, sizeof buf, "LV cutoff %d", bat);
       statuslogCheckChange(buf, newLVCutoff, lowVoltageCutoff);
       statusReportStatus(statusBatteryLowError, lowVoltageCutoff);
     }

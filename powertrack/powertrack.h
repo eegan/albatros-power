@@ -61,8 +61,8 @@ void runTimer::reinit()
 
 bool runTimer::runNow()
 {
-  long m;
-  if ((m = millis()) - lastRun >= interval) {
+  long m = millis();
+  if (m - lastRun >= interval) {
     lastRun = m;
     return true;
   }

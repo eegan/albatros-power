@@ -52,6 +52,7 @@ void monitorInit() {
 void monitorInit2() {
   statuslogWriteLine("ALBATROS power system v 1.0");
   statuslogWriteLine(rtcPresentTime());
+  statuslogWriteLine("Compile date: "  __DATE__ " time: " __TIME__);  
   monitorPort.println("Serial monitor - commands:");
   monitorPort.print(helpstring);
   inbufpos = 0;
@@ -68,7 +69,6 @@ void monitorLoopHandler() {
   char c, lastValidc;
   
   while (EOF != (c = monitorPort.read())) {
-//    debug.print(c,16); debug.print(" ");  
     lastValidc = c;
 
     if ('\b' == c || 0x7f == c) { // backspace or rubout
