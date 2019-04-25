@@ -69,7 +69,6 @@ void monitorLoopHandler() {
   char c, lastValidc;
   
   while (EOF != (c = monitorPort.read())) {
-//    debug.print(c,16); debug.print(" ");  
     lastValidc = c;
 
     if ('\b' == c || 0x7f == c) { // backspace or rubout
@@ -91,7 +90,7 @@ void monitorLoopHandler() {
     return;
 
   // If the last character was CR, we're done; replace it with null
-  // Else quit and come back later
+  // Else quit and come back shouldBeAtLeastAsBig
 
   // This hack lets you enter a line that is filled with gibberish so you don't think the monitor is dead after this is done
 //  if ('\r' == mon_buf[inbufpos-1])
@@ -208,20 +207,20 @@ void monitorLoopHandler() {
   } 
 }
 
-void checkvalues(int32_t later, int32_t earlier, char const *file, uint16_t line)
+// print out a message if shouldBeAtLeastAsBig < reference
+void checkvalues(int32_t shouldBeAtLeastAsBig, int32_t reference, char const *file, uint16_t line)
 {
   HardwareSerial &p = monitorPort;
-	int32_t diff = later - earlier;
+	int32_t diff = shouldBeAtLeastAsBig - reference;
 	if (diff < 0) 
 	{
     p.print(rtcPresentTime());
 		p.print(" Checkvalues: "); 
 		p.print(file); p.print(" "); 
 		p.print(line); p.print(" ");
-		p.print(later, 16); p.print(" ");
-		p.print(earlier, 16); p.print(" ");
+		p.print(shouldBeAtLeastAsBig, 16); p.print(" ");
+		p.print(reference, 16); p.print(" ");
 		p.print(diff, 16); p.print(" ");
-//    p.print(diff < 0? "ABNORMAL" : "NORMAL");
     p.println();
 	}
 }

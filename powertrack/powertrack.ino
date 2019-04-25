@@ -43,8 +43,13 @@ void setup()
   CHECKVALUES(5, 6);
 
   CHECKVALUES(6, 5);
+  
+  statusLogPrint("Testing number magnitude", 9999999999999999999999.999);
+  statusLogPrint("Testing number magnitude", 99999999999999999999999.999);
+  statusLogPrint("Testing number magnitude", 999999999999999999999999.999);
+  statusLogPrint("Testing number magnitude", 9999999999999999999999999.999);
 
-//  CHECKVALUES(5+3, 5);
+  //  CHECKVALUES(5+3, 5);
 //
 //  CHECKVALUES(0x7ffffffe, (0x7ffffffe + 1000));
 //  CHECKVALUES((0x7ffffffe + 1000), 0x7ffffffe);

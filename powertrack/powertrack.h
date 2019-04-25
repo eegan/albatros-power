@@ -7,6 +7,10 @@
 #define POWERTRACK_H
 
 #define CHECKVALUES(later, earlier) checkvalues(later, earlier, __FILE__, __LINE__)
+
+//#define BC(a,b)
+#define BC(array,index) checkvalues(sizeof (array), (index)+1, __FILE__, __LINE__)
+
 void checkvalues(int32_t later, int32_t earlier, char const *file, uint16_t line);
 
 typedef unsigned long UINT32;

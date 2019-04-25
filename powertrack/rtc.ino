@@ -73,7 +73,7 @@ int rtcSecond() {
 /////////////////////////////////////////////////////////////////////////////////////
 char *rtcPresentTime()
 {
-  static char buf[20] = (__TIME__);
+  static char buf[20];
   rtcReadTime();
   snprintf(buf, sizeof buf,"%04d/%02d/%02d %02d:%02d:%02d", 
     now.year(), now.month(), now.day(),
@@ -85,7 +85,7 @@ char *rtcPresentTime()
 // rtcSetTime
 // set time buffer from formatted time string
 /////////////////////////////////////////////////////////////////////////////////////
-void rtcSetTime(char *s)
+void rtcSetTime(const char *s)
 {
   int hour,min,sec;
   sscanf(s, "%d:%d:%d", &hour, &min, &sec );
@@ -96,7 +96,7 @@ void rtcSetTime(char *s)
 // rtcSetDate
 // set time buffer from formatted date string
 /////////////////////////////////////////////////////////////////////////////////////
-void rtcSetDate (char *s) 
+void rtcSetDate (const char *s) 
 {
   int year, month, day;
   sscanf(s, "%d/%d/%d", &year, &month, &day );

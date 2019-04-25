@@ -132,7 +132,7 @@ long cfg_fieldValue(int ndx)
 // set in-memory value given string versions of index and value
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Set in-memory configuration
-void cfg_set(char *indexString, char *valueString) {
+void cfg_set(const char *indexString, const char *valueString) {
   if (isdigit(*indexString) && isdigit(*valueString)) {
     int index = atoi(indexString);
     long value = parseValue(index, valueString);
@@ -241,11 +241,6 @@ void loadConfig() {
       ((byte*) eeprom_fields)[i] = EEPROM.read(FIELDS_START+i);
 }
 
-//char *fieldName(int ndx)
-//{
-//  return fieldNames[ndx];
-//}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // fieldValueString - format the field value as a string
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,7 +263,7 @@ char *fieldValueString(int ndx)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // parseValue - parse the string value according to the type
 /////////////////////////////////////////////////////////////////////////////////////////////////
-long parseValue(int ndx, char *str)
+long parseValue(int ndx, const char *str)
 {
   long v;
   int h=0, m=0, s=0;

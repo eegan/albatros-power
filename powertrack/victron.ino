@@ -274,6 +274,7 @@ void readElement(char &checksum, char terminator) {
   int maxToRead = min(BUFLEN, cb_available());
   int ellen;  // element length
   for (ellen = 0; ellen < maxToRead; ellen++) {
+	BC(buf, ellen);
     buf[ellen] = cb_nextchar();
     checksum += buf[ellen];
     if (buf[ellen] == terminator)
@@ -290,7 +291,11 @@ void readElement(char &checksum, char terminator) {
   // note that we will also overwrite the checksum byte but that's okay since we've checksummed it
   // and we'll check the checksum later
 
-  if (ellen <= BUFLEN) buf[ellen] = '\0';  
+  if (ellen == BUFLEN)  // In an effort to determine if we have caught a  bug, ... the lower if condition was <=
+	  statusLogPrint("WOULD HAVE WRITTEN 1 LOCATION OUT OF BOUNDS");
+  if (ellen < BUFLEN) {
+	  buf[ellen] = '\0';
+  }
 }
 
 // TODO: add string fields (they have to also be stored ...)

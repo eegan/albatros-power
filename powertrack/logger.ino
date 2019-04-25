@@ -72,7 +72,7 @@ void loggerRootDir (Stream &p)
 // loggerDumpFile
 // dump contents of specified file, to port p
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerDumpFile(Stream &p, char *filename)
+void loggerDumpFile(Stream &p, const char *filename)
 {
   char c;
   File f = SD.open(filename);
@@ -95,7 +95,7 @@ void loggerDumpFile(Stream &p, char *filename)
 // loggerEraseFile
 // erase specified file
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerEraseFile (Stream &p, char *filename)
+void loggerEraseFile (Stream &p, const char *filename)
 {
   SD.remove(filename);
 }
@@ -284,6 +284,7 @@ bool statuslogCheckChange(char const *string, bool newValue, bool &currentValue,
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Status log print functions for strings, longs and floats
 /////////////////////////////////////////////////////////////////////////////////////////////////
+// for flags
 void statusLogPrint(char const *string, bool flag)
 {
   const int buflen = 100;
@@ -294,6 +295,7 @@ void statusLogPrint(char const *string, bool flag)
   statuslogWriteLine(buf);
 }
 
+// for flags with additional parameters
 void statusLogPrint(char const *string, bool flag, uint32_t a, uint32_t b)
 {
   const int buflen = 100;
@@ -303,36 +305,43 @@ void statusLogPrint(char const *string, bool flag, uint32_t a, uint32_t b)
 
   statuslogWriteLine(buf);
 }
+
+
 // This one is for logging commands
 void statusLogPrint(char const *string)
 {
   const int buflen = 100;
   char buf[buflen];
 
-  snprintf(buf, sizeof buf, "%19s %50s", rtcPresentTime(), string);
+  snprintf(buf, sizeof buf, "%19s %30s", rtcPresentTime(), string);
 
   statuslogWriteLine(buf, false);
 }
 
+// for long
 void statusLogPrint(char const *string, long l)
 {
   const int buflen = 100;
   char buf[buflen];
 
-  snprintf(buf, sizeof buf, "%19s %50s = %ld", rtcPresentTime(), string, l);
+  snprintf(buf, sizeof buf, "%19s %30s = %ld", rtcPresentTime(), string, l);
 
   statuslogWriteLine(buf);
 }
 
+// for double value
 void statusLogPrint(char const *string, double d)
 {
   const int buflen = 100;
   char buf[buflen];
-  char bufd[30];  // buffer for nummber
+  char bufd[30];  // buffer for number
 
-  dtostrf(d, 7, 3, bufd);
+  if (abs(d) > 1e24)
+    strcpy(bufd, "*****");
+  else
+    dtostrf(d, 7, 5, bufd);
 
-  snprintf(buf, sizeof buf, "%19s %50s = %s", rtcPresentTime(), string, bufd);
+  snprintf(buf, sizeof buf, "%19s %30s = %s", rtcPresentTime(), string, bufd);
 
   statuslogWriteLine(buf);
 }
