@@ -3,6 +3,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 
 #include "powertrack.h"
+#include "githash.h"
 #include <EEPROM.h>
 
 #define LINE_BUF_LEN 30 // max number of bytes in a command
@@ -52,7 +53,9 @@ void monitorInit() {
 void monitorInit2() {
   statuslogWriteLine("ALBATROS power system v 1.0");
   statuslogWriteLine(rtcPresentTime());
-  statuslogWriteLine("Compile date: "  __DATE__ " time: " __TIME__);  
+  statuslogWriteLine("Compile date: "  __DATE__ " time: " __TIME__);
+  statuslogWriteLine("Git hash: " GITHASH);
+
   monitorPort.println("Serial monitor - commands:");
   monitorPort.print(helpstring);
   inbufpos = 0;

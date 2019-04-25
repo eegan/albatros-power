@@ -1,0 +1,1 @@
+#define GITHASH "(recipe hook not installed, see README.md)"
