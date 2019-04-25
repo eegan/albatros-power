@@ -73,7 +73,7 @@ int rtcSecond() {
 /////////////////////////////////////////////////////////////////////////////////////
 char *rtcPresentTime()
 {
-  static char buf[20] = (__TIME__);
+  static char buf[20];
   rtcReadTime();
   snprintf(buf, sizeof buf,"%04d/%02d/%02d %02d:%02d:%02d", 
     now.year(), now.month(), now.day(),

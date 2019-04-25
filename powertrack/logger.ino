@@ -164,7 +164,7 @@ void loggerNotifyVictronSample()
 // Open the file and write a line from the log
 // Reset the log variables
 /////////////////////////////////////////////////////////////////////////////////////////////////
-char logFileName[13]; // 8.3 + null
+char logFileName[15]; // 8.3 + null + 2 for good luck
 void loggerLogEntry() 
 {
   rtcReadTime();
@@ -310,9 +310,12 @@ void statusLogPrint(char const *string, double d)
 {
   const int buflen = 100;
   char buf[buflen];
-  char bufd[30];  // buffer for nummber
-
-  dtostrf(d, 7, 3, bufd);
+  char bufd[50];  // buffer for number
+  
+  if (abs(d) > 1e30)  // should be lots of margin
+    strcpy(bufd, "**********");
+  else
+    dtostrf(d, 7, 3, bufd);
 
   snprintf(buf, sizeof buf, "%19s %50s = %s", rtcPresentTime(), string, bufd);
 
@@ -325,7 +328,7 @@ void statusLogPrint(char const *string, double d)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void statuslogWriteLine(char const *string, bool echo)
 {
-  char logFileName[13]; // 8.3 + null  
+  char logFileName[15]; // 8.3 + null + 2 for good luck
   
   if (echo) monitorPort.println(string);
 
