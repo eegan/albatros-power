@@ -21,7 +21,7 @@ void victronInit()
   victronData.begin(19200);  // Victron baud rate
   victronData.setTimeout(0); // this apparently works to set infinite timeout which is what we want
   
-  victronLastSampleTime = millis() / 1000;
+  victronLastSampleTime = millis();
   
   initbuffers();
 }
@@ -239,14 +239,14 @@ void ParsePacket()
         value = 0 == strcasecmp("on", buf);  // aka stricmp
         break;
       case FT_checksum:
-        ASSERT(0 == checksum);
         #if DEBUG_VICTRON
         debug.print("Checksum: "); debug.println((int)checksum);
         #endif
-        value = checksum;
-        victronSampleReceived = true; // flag that we've seen a packet (ever)
-        victronLastSampleTime = millis() / 1000;
-        victronUpdateNotify();
+        if (0 == checksum) {
+          victronSampleReceived = true; // flag that we've seen a packet (ever)
+          victronLastSampleTime = millis();
+          victronUpdateNotify();
+        }
         break;
       case FT_string:
         #if DEBUG_VICTRON
@@ -261,13 +261,9 @@ void ParsePacket()
     }
     fieldDescriptors[fieldIndex].value = value;
   }
-
- // TODO: check if checksum = 0, or just store it    
-   
 }
 
 void readElement(char &checksum, char terminator) {
-
   // Prevent buffer overrun (use BUFLEN, leaving room for terminal null)
   // Only expect up to amount that was cb_available in packet (nchars): The last field won't 
   // terminate in \r\n, since this is at the start of the next packet
@@ -319,7 +315,7 @@ void victronUpdateNotify()
 
 long victronGetDataAge()
 {
-  return millis()/1000 - victronLastSampleTime;
+  return millis() - victronLastSampleTime;
 }
 
 bool victronSampleSeen()

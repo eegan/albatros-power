@@ -1,1 +1,1 @@
-#define GITHASH "(recipe hook not installed, see README.md)"
+#define GITHASH "(recipe hook or perl not installed, see README.md)"

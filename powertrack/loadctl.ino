@@ -68,7 +68,7 @@ void loadctlLoopHandler()
     // See if it's been too long since we got a data packet from the Victron
     uint32_t v, c;
     
-    bool newDataAgeCutoff = (v = victronGetDataAge()) > (c = cfg_fieldValue(ndx_maxVDataAge));
+    bool newDataAgeCutoff = (v = victronGetDataAge()) > (c = cfg_fieldValue(ndx_maxVDataAge) * 1000);
     statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff, v, c);
     statusReportStatus(statusVictronTimeoutError, dataAgeCutoff);
 

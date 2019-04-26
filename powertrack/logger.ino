@@ -18,7 +18,7 @@ void loggerInit()
 {
   SD.begin(SD_CSpin);
   loggerZeroVariables();
-  timeSinceLastLogEntry = rtcGetTime();
+  timeSinceLastLogEntry = millis();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -27,8 +27,8 @@ void loggerInit()
 /////////////////////////////////////////////////////////////////////////////////////
 void loggerLoopHandler()
 {
-  long now = rtcGetTime();
-  if (now - timeSinceLastLogEntry > cfg_fieldValue(ndx_secsPerLog)) {
+  long now = millis();
+  if (now - timeSinceLastLogEntry > cfg_fieldValue(ndx_secsPerLog)*1000) {
     loggerLogEntry();
     timeSinceLastLogEntry = now;
   }
