@@ -18,15 +18,18 @@ RTC_PCF8523 rtc;
 // rtcInit
 // Init (called from main)
 /////////////////////////////////////////////////////////////////////////////////////
-void rtcInit()
-{
+void rtcInit() {
   if (!rtc.begin()) {
     e_rtcState = NOT_PRESENT;
-    return;
+  }
+  else {
+    e_rtcState = rtc.initialized() ? INITIALIZED : UNINITIALIZED;
   }
   
-  e_rtcState = rtc.initialized() ? INITIALIZED : UNINITIALIZED;
+  if (INITIALIZED != e_rtcState)
+    statusReportStatus(statusRTCAccessError, true);
 }
+
 // temporary storage while setting RTC
 DateTime dt;
 TimeSpan tm;
