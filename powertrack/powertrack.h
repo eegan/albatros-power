@@ -16,7 +16,8 @@
 
 #if DEBUG
 #define ASSERT(x) {if (0==(x)) assertfail(__FILE__, __LINE__);}
-#define BC(array, index) { ASSERT(index >= 0 && index < COUNT_OF (array)); }
+//#define BC(array, index) { ASSERT(index >= 0 && index < COUNT_OF (array)); }
+#define BC(array, index) { bc(COUNT_OF(array), index, __FILE__, __LINE__); }
 #else
 #define ASSERT(x)
 #endif
