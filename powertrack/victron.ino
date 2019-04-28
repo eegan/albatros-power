@@ -179,7 +179,7 @@ char buf[BUFLEN];
 void ParsePacket()
 {
 
-  byte fieldIndex;
+  int16_t fieldIndex;
   byte fieldType;
 
   // read until we see 'P' for PID field; there shouldn't be any in any hex data in between packets
@@ -209,8 +209,7 @@ void ParsePacket()
 
     // TODO: probably don't make this an assertion, since we want to work normally
     // if a controller has additional fields we don't know about
-    ASSERT(-1 != fieldIndex) // or it wasn't found :(
-
+    //ASSERT(-1 != fieldIndex) // or it wasn't found :(
     // read the field value into buffer
     readElement(checksum, '\r');
 
@@ -222,47 +221,52 @@ void ParsePacket()
       checksum += c; // should be '\n'
     }
 
-    long value = 0;
-    
-    switch(fieldType) {
-      case FT_int:
-      case FT_bool:
-        value = atol(buf);
-        
-        #if DEBUG_VICTRON
-        debug.print(fieldDescriptors[fieldIndex].tag);
-        debug.print("=");
-        debug.println(value);
-        #endif
-        
-        // TODO: something with value
-        break;
-      case FT_ON_OFF:
-        value = 0 == strcasecmp("on", buf);  // aka stricmp
-        break;
-      case FT_checksum:
-        #if DEBUG_VICTRON
-        debug.print("Checksum: "); debug.println((int)checksum);
-        #endif
-        if (0 == checksum) {
-          victronSampleReceived = true; // flag that we've seen a packet (ever)
-          victronLastSampleTime = millis();
-          victronUpdateNotify();
-        }
-        break;
-      case FT_string:
-        #if DEBUG_VICTRON
-        debug.print(fieldDescriptors[fieldIndex].tag);
-        debug.print("=");
-        debug.println(value);
-        #endif
-        
-        break;
-      default:
-        ASSERT(0);
+    if (-1 == fieldIndex) { // unknown field 
+      monitorPort.print("Unknown field: ");
+      monitorPort.println(buf);
     }
-    BC(fieldDescriptors, fieldIndex);
-    fieldDescriptors[fieldIndex].value = value;
+    else {
+      long value = 0;
+      switch(fieldType) {
+        case FT_int:
+        case FT_bool:
+          value = atol(buf);
+          
+          #if DEBUG_VICTRON
+          debug.print(fieldDescriptors[fieldIndex].tag);
+          debug.print("=");
+          debug.println(value);
+          #endif
+          
+          // TODO: something with value
+          break;
+        case FT_ON_OFF:
+          value = 0 == strcasecmp("on", buf);  // aka stricmp
+          break;
+        case FT_checksum:
+          #if DEBUG_VICTRON
+          debug.print("Checksum: "); debug.println((int)checksum);
+          #endif
+          if (0 == checksum) {
+            victronSampleReceived = true; // flag that we've seen a packet (ever)
+            victronLastSampleTime = millis();
+            victronUpdateNotify();
+          }
+          break;
+        case FT_string:
+          #if DEBUG_VICTRON
+          debug.print(fieldDescriptors[fieldIndex].tag);
+          debug.print("=");
+          debug.println(value);
+          #endif
+          
+          break;
+        default:
+          ASSERT(0);
+      }
+      BC(fieldDescriptors, fieldIndex);
+      fieldDescriptors[fieldIndex].value = value;
+    }
   }
 }
 
