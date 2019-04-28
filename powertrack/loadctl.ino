@@ -198,3 +198,39 @@ bool loadctlGetLoadState()
 {
   return loadOn;
 }
+
+
+void loadListFlags(Stream &p)
+{
+  uint16_t n = 0;
+  listFlag(p, "Low voltage cutoff", lowVoltageCutoff, n++);
+  listFlag(p, "Data age cutoff   ", dataAgeCutoff, n++);
+  listFlag(p, "daytime           ", daytime, n++);
+  listFlag(p, "measure time      ", measureTime, n++);
+  listFlag(p, "load on           ", loadOn, n++);
+  listFlag(p, "run during day    ", runDuringDay, n++);
+}
+
+void listFlag(Stream &p, const char *name, bool value, uint16_t index)
+{
+  p.print(index); p.print(" ");
+  p.print(name); p.print(": ");
+  p.println(value);
+}
+
+void loadSetFlag(uint16_t index, uint16_t value)
+{
+  char message[40];
+  if (index > 5) return;
+  snprintf(message, sizeof message, "Overriding flag %d, new value is %d", index, value);
+  statusLogPrint(message);
+  
+  switch(index) {
+    case 0: lowVoltageCutoff = value; break;
+    case 1: dataAgeCutoff = value; break;
+    case 2: daytime = value; break;
+    case 3: measureTime = value; break;
+    case 4: loadOn = value; break;
+    case 5: runDuringDay = value; break;
+  }
+}

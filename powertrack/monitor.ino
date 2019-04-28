@@ -35,6 +35,9 @@ char helpstring[] =
       "unlatch code         - set code as non-latching" CRLF
       "block code           - set code as blocked" CRLF
       "unblock code         - set code as unblocked" CRLF
+      "flags                - list control flags" CRLF
+      "fset index value     - set flag variables" CRLF
+      "test                 - whatever we decide" CRLF
       ;
       
 /////////////////////////////////////////////////////////////////////////////////////
@@ -203,6 +206,12 @@ void monitorLoopHandler() {
   }
   else if (0 == strcmp(command, "unblock")) {
     statusSetBlocked(atoi(arg1), false);        
+  }
+  else if (0 == strcmp(command, "flags")) {
+    loadListFlags(monitorPort);        
+  }
+  else if (0 == strcmp(command, "fset")) {
+    loadSetFlag(atoi(arg1), atoi(arg2));
   }
   else if (0 == strcmp(command, "test")) {
     loadModifySV();
