@@ -131,7 +131,7 @@ struct {
 // receive notification of a new Victron sample
 void loggerNotifyVictronSample()
 {
-  for (UINT16 i=0; i < COUNT_OF(logVariables); i++) {
+  for (uint16_t i=0; i < COUNT_OF(logVariables); i++) {
     int ndx = logVariables[i].sourceIndex;
     
     // get the Victron data field, unless it's the load we are logging
@@ -185,7 +185,7 @@ void loggerLogEntry()
     
     f.print("Time, smpCount");
 
-    for (UINT16 i=0; i< COUNT_OF(logVariables); i++) {
+    for (uint16_t i=0; i< COUNT_OF(logVariables); i++) {
       f.print(", ");
       switch(logVariables[i].type) {
         case lvtNumeric:
@@ -211,7 +211,7 @@ void loggerLogEntry()
   f.print(sampleCount);
 
   // Write out the data line
-  for (UINT16 i=0; i< COUNT_OF(logVariables); i++) {
+  for (uint16_t i=0; i< COUNT_OF(logVariables); i++) {
 
     // Print the variables
     f.print(", ");
@@ -239,7 +239,7 @@ void loggerLogEntry()
 
 void loggerZeroVariables()
 {
-  for (UINT16 i=0; i<COUNT_OF(logVariables); i++) {
+  for (uint16_t i=0; i<COUNT_OF(logVariables); i++) {
     logVariables[i].sum = 0;
     logVariables[i].min = 0x7FFFFFFF;
     logVariables[i].max = 0x80000000;

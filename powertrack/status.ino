@@ -69,7 +69,7 @@ void statusClear(uint16_t code)
 
 void statusClearAll()
 {
-  for (uint16_t i=0; i<COUNT_OF(status); i++)
+  for (uint16_t i=0; i<COUNT_OF(status); i++) {
     status[i].value = false;
 }
 

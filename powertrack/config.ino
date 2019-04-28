@@ -15,25 +15,25 @@
 #define FIELDS_START 32
 
 // ID of the header block
-const UINT16 CONFIG_LEVEL = 1;      // increment for each non-backwards compatible configuration structure upgrade
-const UINT32 FW_VERSION = 0x10000;  // the current firmware version
+const uint16_t CONFIG_LEVEL = 1;      // increment for each non-backwards compatible configuration structure upgrade
+const uint32_t FW_VERSION = 0x10000;  // the current firmware version
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // EEPROM header data structure
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool configNew = false;
-const UINT32 MAGIC = 0xABCD1234;
+const uint32_t MAGIC = 0xABCD1234;
 
 struct valstructtag {
   // validate settings
   struct {
-    UINT32 magic;
-    UINT16 cfg_level;
+    uint32_t magic;
+    uint16_t cfg_level;
   } validation;
 
   // parameters go here
-  UINT32 fw_rev;
+  uint32_t fw_rev;
   
 } cfg = {
   {0, 0} // will be overwritten anyway
@@ -201,7 +201,7 @@ void cfgDumpFieldValues(Stream &p) {
 // If invalid, write hard-coded defaults to the EEPROM
 void checkConfig() {
   // read out the validation sub-struct
-  for (UINT16 i=0; i<sizeof cfg.validation; i++)
+  for (uint16_t i=0; i<sizeof cfg.validation; i++)
     ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
 
 //  monitorPort.print("Magic number: "); monitorPort.println(cfg.validation.magic);
@@ -234,10 +234,10 @@ void checkConfig() {
 // Load header block from EEPROM and check if configuration is valid
 void loadConfig() {
     // load the header block
-    for (UINT16 i=sizeof cfg.validation; i<sizeof cfg; i++)
+    for (uint16_t i=sizeof cfg.validation; i<sizeof cfg; i++)
       ((byte*)&cfg)[i] = EEPROM.read(CONFIG_START+i);
      // load the fields array 
-    for (UINT16 i=0; i<sizeof eeprom_fields; i++)
+    for (uint16_t i=0; i<sizeof eeprom_fields; i++)
       ((byte*) eeprom_fields)[i] = EEPROM.read(FIELDS_START+i);
 }
 

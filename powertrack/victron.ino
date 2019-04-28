@@ -9,7 +9,7 @@ unsigned long lastCharRxMs;           // millisecond timestamp when last increme
 unsigned short lastCharCount;         // Tracks fullness of serial buffer
 const unsigned long serialTimeoutMs = 5;  // Time after last character received, to declare the packet received and parse it
 
-INT32 victronLastSampleTime;
+int32_t victronLastSampleTime;
 bool victronSampleReceived = false;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ const int CBRETAIN = 5; // length of string + 1 for the actual checksum
 
 char circbuf[CBLEN];
 
-UINT16 cbin, cbout;
+uint16_t cbin, cbout;
 void cb_insert(char c)
 {
       // put it in the circular buffer
@@ -68,7 +68,7 @@ void cbinit() {
 ///////////////////////////////////////////////////////////////////////////////////////////
 const int LBBLEN = 10;
 char lbbuf[LBBLEN];
-UINT16 lbin;
+uint16_t lbin;
 void lbbinit() {
   lbin = 0;
 }
@@ -198,7 +198,7 @@ void ParsePacket()
     
     // search for field tag
     fieldIndex = -1;
-    for (UINT16 i=0; i<COUNT_OF(fieldDescriptors); i++) {
+    for (uint16_t i=0; i<COUNT_OF(fieldDescriptors); i++) {
       if (0 == strcasecmp(buf, fieldDescriptors[i].tag)) {
         fieldIndex = fieldDescriptors[i].index;
         fieldType = fieldDescriptors[i].type;
@@ -296,7 +296,7 @@ void readElement(char &checksum, char terminator) {
 // TODO: add string fields (they have to also be stored ...)
 void victronDumpStatus(Stream &p)
 {
-  for (UINT16 i=0; i<FI_field_count; i++) {
+  for (uint16_t i=0; i<FI_field_count; i++) {
     if (fieldDescriptors[i].type != FT_string) 
     {
       p.print(fieldDescriptors[i].tag);
