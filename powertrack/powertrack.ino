@@ -78,20 +78,16 @@ void paceLoop()
 // NOT REALLY USED AT THIS POINT
 ////////////////////////////////////////////////////////////////////////////////////
 
-#define DEBUG 1
-
 #if DEBUG
-#define ASSERT(x) {if (0==(x)) assertfail(__FILE__, __LINE__);}
-#else
-#define ASSERT(x)
-#endif
-
 void assertfail(char const *file, long line)
 {
-  // TODO: something
-  // like print a message on the debug port
+  char message[70];
+  snprintf(message, sizeof message, "Assert fail line %d", line);
+  statusLogPrint(message);
+  statusLogPrint(file);
+  monitorPort.println("Assert fail!");
 }
-////////////////////////////////////////////////////////////////////////////////////
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////////

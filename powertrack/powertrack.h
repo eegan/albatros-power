@@ -6,11 +6,21 @@
 #ifndef POWERTRACK_H
 #define POWERTRACK_H
 
-
 #define CRLF "\r\n"
 
 // Macro to return number of elements in an array
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+
+
+#define DEBUG 1
+
+#if DEBUG
+#define ASSERT(x) {if (0==(x)) assertfail(__FILE__, __LINE__);}
+#define BC(array, index) { ASSERT(index >= 0 && index < COUNT_OF (array)); }
+#else
+#define ASSERT(x)
+#endif
+
 
 // Hardware definitions
 #define loadPin 5     // On/off control for load switch

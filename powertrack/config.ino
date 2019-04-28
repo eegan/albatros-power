@@ -147,6 +147,7 @@ void cfg_set(const char *indexString, const char *valueString) {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Set in-memory configuration
 void cfg_set(int index, long value) {
+  BC(eeprom_fields, index);
   eeprom_fields[index].value = value;
 }
 

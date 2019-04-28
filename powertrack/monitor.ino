@@ -85,6 +85,7 @@ void monitorLoopHandler() {
     }
     else {
       if (inbufpos < LINE_BUF_LEN-1) {
+        BC(mon_buf, inbufpos);
         mon_buf[inbufpos++] = c;
         monitorPort.print(c);
       }
@@ -100,8 +101,10 @@ void monitorLoopHandler() {
 
   // This hack lets you enter a line that is filled with gibberish so you don't think the monitor is dead after this is done
 //  if ('\r' == mon_buf[inbufpos-1])
-  if ('\r' == lastValidc)
+  if ('\r' == lastValidc) {
+    BC(mon_buf, inbufpos);
     mon_buf[inbufpos-1] = 0;
+  }
   else
     return;
 

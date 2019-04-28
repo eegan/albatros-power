@@ -39,10 +39,12 @@ void statusReportStatus(uint16_t code, bool conditionTrue)
 {
   if (code >= COUNT_OF(status)) return;
   if ( conditionTrue ) {
+    BC(status, code);
     status[code].value = true;
   }
   else {
     // reporting false
+    BC(status, code);
     if ( ! status[code].latching )
       status[code].value = false;
   }
@@ -52,25 +54,30 @@ void statusReportStatus(uint16_t code, bool conditionTrue)
 void statusSetLatching(uint16_t code, bool state)
 {
   if (code >= COUNT_OF(status)) return;
+  BC(status, code);  
   status[code].latching = state;
 }
 
 void statusSetBlocked(uint16_t code, bool state)
 {
   if (code >= COUNT_OF(status)) return;  
+  BC(status, code);
   status[code].blocked = state;
 }
 
 void statusClear(uint16_t code)
 {
   if (code >= COUNT_OF(status)) return;
+  BC(status, code);  
   status[code].value = false;
 }
 
 void statusClearAll()
 {
   for (uint16_t i=0; i<COUNT_OF(status); i++) {
+    BC(status, i);  
     status[i].value = false;
+  }
 }
 
 void statusDumpStatus(Stream &p) {

@@ -139,7 +139,8 @@ void loggerNotifyVictronSample()
     // Note: strictly speaking it doesn't make sense to tie the load state sampling to Victron data packets
     // Logically this should be done independently. But practically speaking, if the Victron stops sending
     // data, it probably means something pretty bad.
-       
+    
+    BC(logVariables, i);
     switch(logVariables[i].type) {
       case lvtNumeric:
         logVariables[i].sum += value;
@@ -240,6 +241,7 @@ void loggerLogEntry()
 void loggerZeroVariables()
 {
   for (uint16_t i=0; i<COUNT_OF(logVariables); i++) {
+    BC(logVariables, i);
     logVariables[i].sum = 0;
     logVariables[i].min = 0x7FFFFFFF;
     logVariables[i].max = 0x80000000;
