@@ -204,6 +204,9 @@ void monitorLoopHandler() {
   else if (0 == strcmp(command, "unblock")) {
     statusSetBlocked(atoi(arg1), false);        
   }
+  else if (0 == strcmp(command, "test")) {
+    loadModifySV();
+  }
   
   else {
       monitorPort.print(helpstring);

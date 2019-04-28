@@ -21,12 +21,49 @@ void loadctlInit()
 
 // Conditions that go into determining load status (plus load status)
 // TODO: prefix these with bool
+
+#define SV1 0x1122
+#define SV2 0x3344
+#define SV3 0x5566
+#define SV4 0x7788
+#define SV5 0x99aa
+#define SV6 0xbbcc
+#define SV7 0xddee
+
+uint16_t sv1 = SV1;
 bool lowVoltageCutoff = false;  // True if cut off because of low voltage. Hysteresis implemented.
+uint16_t sv2 = SV2;
 bool dataAgeCutoff = false;     // True if cut off because of Victron data being too old
+uint16_t sv3 = SV3;
 bool daytime = false;           // True if we are in daytime
+uint16_t sv4 = SV4;
 bool measureTime = false;       // True if we are within the interval in which we characterize the battery voltage
+uint16_t sv5 = SV5;
 bool loadOn = false;
+uint16_t sv6 = SV6;
 bool runDuringDay = false;      // True if we are scheduled to run during the (following) day
+uint16_t sv7 = SV7;
+
+
+  // char message[40];
+  // if (index > 5) return;
+  // snprintf(message, sizeof message, "Overriding flag %d, new value is %d", index, value);
+  // statusLogPrint(message);
+void checkSentinels()
+{
+  if (sv1 != SV1) { statusLogPrint("Sentinel value 1", (double)sv1); sv1 = SV1; }
+  if (sv2 != SV2) { statusLogPrint("Sentinel value 2", (double)sv2); sv2 = SV2; }
+  if (sv3 != SV3) { statusLogPrint("Sentinel value 3", (double)sv3); sv3 = SV3; }
+  if (sv4 != SV4) { statusLogPrint("Sentinel value 4", (double)sv4); sv4 = SV4; }
+  if (sv5 != SV5) { statusLogPrint("Sentinel value 5", (double)sv5); sv5 = SV5; }
+  if (sv6 != SV6) { statusLogPrint("Sentinel value 6", (double)sv6); sv6 = SV6; }
+  if (sv7 != SV7) { statusLogPrint("Sentinel value 7", (double)sv7); sv7 = SV7; }
+}
+
+void loadModifySV()
+{
+  sv4 = 54321;
+}
 
 long batVoltN = 0;
 double batTimeSum = 0;
@@ -42,6 +79,7 @@ long measureStartTime;
 /////////////////////////////////////////////////////////////////////////////////////
 void loadctlLoopHandler()
 {
+  checkSentinels(); // do this all the time (!)
   if (loadRunTimer.runNow()) {        
     timeOfDay = rtcGetTime() % DAY_SECONDS;
     rtcReadTime();
