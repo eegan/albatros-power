@@ -135,7 +135,7 @@ void loadctlLoopHandler()
         double slope = computedSlope;
 
         double proj = intercept + slope * cfg_fieldValue(ndx_hoursReserve) * 3600L;
-        bool runDuringDay = proj > cfg_fieldValue(ndx_vbatOffThresholdMv);
+        runDuringDay = proj > cfg_fieldValue(ndx_vbatOffThresholdMv);
         statusLogPrint("Computed slope", computedSlope);
         statusLogPrint("Intercept", intercept);
         statusLogPrint("Projected value", proj);
