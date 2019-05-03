@@ -5,6 +5,7 @@
 #include "powertrack.h"
 #include "githash.h"
 #include <EEPROM.h>
+#include <avr/pgmspace.h>
 
 #define LINE_BUF_LEN 30 // max number of bytes in a command
 #define MAX_ARG_LEN 12 // max characters per arg
@@ -13,7 +14,7 @@
 bool error_flag = false;
 int inbufpos;
 
-char helpstring[] = 
+const char helpstring[] PROGMEM = 
       "def                  - dump EEPROM fields" CRLF
       "inv                  - invalidate EEPROM (use to reinitialize or to test init code)" CRLF
       "com                  - commit: save in-memory config fields to EEPROM" CRLF
@@ -37,6 +38,7 @@ char helpstring[] =
       "unblock code         - set code as unblocked" CRLF
       "flags                - list control flags" CRLF
       "fset index value     - set flag variables" CRLF
+      "safe                 - put firmare in safe mode for power down (no SD access)" CRLF
       // "test                 - whatever we decide" CRLF
       ;
       
@@ -60,8 +62,14 @@ void monitorInit2() {
   statuslogWriteLine("Git hash: " GITHASH);
 
   monitorPort.println("Serial monitor - commands:");
-  monitorPort.print(helpstring);
+  monitorPrintHelp();
   inbufpos = 0;
+}
+
+void monitorPrintHelp() {
+  char localHelp[sizeof helpstring];
+  strncpy_P(localHelp, helpstring, sizeof localHelp);
+  monitorPort.print(localHelp);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -216,11 +224,21 @@ void monitorLoopHandler() {
   else if (0 == strcmp(command, "fset")) {
     loadSetFlag(atoi(arg1), atoi(arg2));
   }
+  else if (0 == strcmp(command, "safe")) {
+    char c = 0;
+    do {
+      monitorPort.println("Safe for power down, all operations suspended, hit X to cancel.");
+      delay(1000);
+      while (EOF != (c = monitorPort.read()))
+        if ('X' == c) break;
+    } while ('X' != c);
+    monitorPort.println("Safe mode cancelled.");
+  }  
   // else if (0 == strcmp(command, "test")) {
     // loadModifySV();
   // }
   
   else {
-      monitorPort.print(helpstring);
+        monitorPrintHelp();;
   } 
 }
