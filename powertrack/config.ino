@@ -85,22 +85,21 @@ struct {
 // Field names
 char const *fieldNames[] = 
 {
-    "VBAT_TURNOFF_MV"
-  , "VBAT_TURNON_MV"
-  , "MEASURE_START"
-  , "MEASURE_END"
-  , "DAY_START"
-  , "DAY_END"
-  , "HOURS_RESERVE"
-  , "SLOPE_UV_PER_HOUR (NOT USED)"
-  , "SECS_PER_LOG"
-  , "MAX_VIC_DATA_AGE"
+    "VBAT_TURNOFF_MV   - low volt cutoff asserted if vbat below this level            "
+  , "VBAT_TURNON_MV    - low volt cutoff negated if vbat above this level             "
+  , "MEASURE_START     - start vbat measurement for run-during-day decision           "
+  , "MEASURE_END       - end voltage measurement for run-during-day decision          "
+  , "DAY_START         - turn off load (unless running during day)                    "
+  , "DAY_END           - turn on load (if otherwise qualified)                        "
+  , "HOURS_RESERVE     - min reserve from MEASURE_START for day run (NEG = no day run)"
+  , "SLOPE_UV_PER_HOUR - (not currently used)                                         "
+  , "SECS_PER_LOG      - seconds between power log entries                            "
+  , "MAX_VIC_DATA_AGE  - seconds of no data to declare victron data timeout           "
 };
 
 // TODO: include a field count in the header struct, 
 // and initialze fields beyond the current EEPROM field count value, to defaults
 // This allows an upgrade which adds fields but preserves previously defined values
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +182,7 @@ void cfgDumpFieldValues(Stream &p) {
 
   for (uint16_t i=0; i<COUNT_OF(eeprom_fields); i++)
   {
-    char buf[50];
+    char buf[100];
     snprintf(buf, sizeof buf, "%d - %s = %s", i, fieldNames[i], fieldValueString(i));
     p.println(buf);
   }
