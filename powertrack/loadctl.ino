@@ -128,16 +128,21 @@ void loadctlLoopHandler()
 
         monitorPort.print("Computed slope: "); monitorPort.println(computedSlope);
         monitorPort.print("Intercept: "); monitorPort.println(intercept);
-
-        // it might be different if we smooth with the EEPROM value
-        double slope = computedSlope;
-
-        double proj = intercept + slope * cfg_fieldValue(ndx_hoursReserve) * 3600L;
-        runDuringDay = proj > cfg_fieldValue(ndx_vbatOffThresholdMv);
         statusLogPrint("Computed slope", computedSlope);
         statusLogPrint("Intercept", intercept);
-        statusLogPrint("Projected value", proj);
-        statusLogPrint("Run during day", runDuringDay);
+        
+        // it might be different if we smoothe with the EEPROM value
+        double slope = computedSlope;  // for now, no smoothing
+          
+        if (cfg_fieldValue(ndx_hoursReserve) < 0) {
+          statusLogPrint("Run during day disabled, reserve hours param < 0");
+        }
+        else  {
+          double proj = intercept + slope * cfg_fieldValue(ndx_hoursReserve) * 3600L;
+          runDuringDay = proj > cfg_fieldValue(ndx_vbatOffThresholdMv);
+          statusLogPrint("Projected value", proj);
+          statusLogPrint("Run during day", runDuringDay);
+        }
       }
     }
     

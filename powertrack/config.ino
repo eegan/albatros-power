@@ -132,7 +132,7 @@ long cfg_fieldValue(int ndx)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Set in-memory configuration
 void cfg_set(const char *indexString, const char *valueString) {
-  if (isdigit(*indexString) && isdigit(*valueString)) {
+  if (isdigit(*indexString) && ('-' == *valueString || isdigit(*valueString))) {
     int index = atoi(indexString);
     long value = parseValue(index, valueString);
     cfg_set(index, value);
