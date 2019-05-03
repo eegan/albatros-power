@@ -235,7 +235,6 @@ void monitorLoopHandler() {
     monitorPort.println("Safe mode cancelled.");
   }  
   // else if (0 == strcmp(command, "test")) {
-    // loadModifySV();
   // }
   
   else {
