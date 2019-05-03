@@ -104,10 +104,8 @@ void loadctlLoopHandler()
     // TODO: test the daytime code (mostly done)
 
     // See if it's been too long since we got a data packet from the Victron
-    uint32_t v, c;
-    
-    bool newDataAgeCutoff = (v = victronGetDataAge()) > (c = cfg_fieldValue(ndx_maxVDataAge) * 1000);
-    statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff, v, c);
+    bool newDataAgeCutoff = victronGetDataAge() > cfg_fieldValue(ndx_maxVDataAge) * 1000;
+    statuslogCheckChange("data age cutoff", newDataAgeCutoff, dataAgeCutoff);
     statusReportStatus(statusVictronTimeoutError, dataAgeCutoff);
 
     // See if the voltage measurement flag changes

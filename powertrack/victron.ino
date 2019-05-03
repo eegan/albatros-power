@@ -217,13 +217,13 @@ void ParsePacket()
     // there, unless we're at the last (checksum) field
     if (cb_available()) {
       char c = cb_nextchar();
-      ASSERT('\n' == c)
+      //ASSERT('\n' == c)
       checksum += c; // should be '\n'
     }
 
     if (-1 == fieldIndex) { // unknown field 
-      monitorPort.print("Unknown field: ");
-      monitorPort.println(buf);
+      // monitorPort.print("Unknown field: ");
+      // monitorPort.println(buf);
     }
     else {
       long value = 0;
