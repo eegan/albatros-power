@@ -38,7 +38,7 @@ const char helpstring[] PROGMEM =
       "unblock code         - set code as unblocked" CRLF
       "flags                - list control flags" CRLF
       "fset index value     - set flag variables" CRLF
-      "safe                 - put firmare in safe mode for power down (no SD access)" CRLF
+      "safe                 - put system in safe mode for power down (no SD access)" CRLF
       // "test                 - whatever we decide" CRLF
       ;
       
