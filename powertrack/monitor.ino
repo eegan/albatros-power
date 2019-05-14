@@ -11,7 +11,6 @@
 #define MAX_ARG_LEN 12 // max characters per arg
 #define MAX_ARG_NUM 3  // max number of args per line
 
-bool error_flag = false;
 int inbufpos;
 
 const char helpstring[] PROGMEM = 
@@ -80,7 +79,7 @@ void monitorLoopHandler() {
   char mon_buf[LINE_BUF_LEN];
   char mon_buf_copy[LINE_BUF_LEN]; // for logging
   char *command, *arg1, *arg2;
-  char c, lastValidc;
+  char c, lastValidc = 0;
   
   while (EOF != (c = monitorPort.read())) {
     lastValidc = c;
@@ -121,6 +120,7 @@ void monitorLoopHandler() {
   monitorPort.print(mon_buf);
   monitorPort.println(">");
 
+  // This is so that I have a copy that strtok hasn't ruined (for logging certain commands which should be logged)
   strcpy(mon_buf_copy, mon_buf);
   
   // parse the line into ' ' separated arguments
@@ -213,13 +213,13 @@ void monitorLoopHandler() {
     statusSetLatching(atoi(arg1), false);
   }
   else if (0 == strcmp(command, "block")) {
-    statusSetBlocked(atoi(arg1), true);    
+    statusSetBlocked(atoi(arg1), true);
   }
   else if (0 == strcmp(command, "unblock")) {
-    statusSetBlocked(atoi(arg1), false);        
+    statusSetBlocked(atoi(arg1), false);
   }
   else if (0 == strcmp(command, "flags")) {
-    loadListFlags(monitorPort);        
+    loadListFlags(monitorPort);
   }
   else if (0 == strcmp(command, "fset")) {
     loadSetFlag(atoi(arg1), atoi(arg2));

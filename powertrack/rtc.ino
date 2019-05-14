@@ -74,6 +74,7 @@ int rtcSecond() {
 // rtcPresentTime
 // formatted time string
 /////////////////////////////////////////////////////////////////////////////////////
+// TODO: get rid of static variable(pass in buffer and length)
 char *rtcPresentTime()
 {
   static char buf[20];

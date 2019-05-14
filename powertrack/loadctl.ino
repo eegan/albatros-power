@@ -29,6 +29,7 @@ bool measureTime = false;       // True if we are within the interval in which w
 bool loadOn = false;
 bool runDuringDay = false;      // True if we are scheduled to run during the (following) day
 
+// Statistical accumulators for slope/intercept estimation
 long batVoltN = 0;
 double batTimeSum = 0;
 double batVoltSum = 0;

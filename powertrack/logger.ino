@@ -8,6 +8,7 @@
 #include <SD.h>
 
 int sampleCount = 0;
+// TODO: could/should we use runtimer?
 long timeSinceLastLogEntry;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +118,7 @@ struct {
 } logVariables[] = 
 
 {
-   {"BatVolt", FI_V,   lvtNumeric}  
+   {"BatVolt",  FI_V,   lvtNumeric}  
   ,{"PVVolt",   FI_VPV, lvtNumeric}  
   ,{"PVPwr",    FI_PPV, lvtNumeric}
   ,{"BatCur",   FI_I,   lvtNumeric}
@@ -174,10 +175,11 @@ void loggerLogEntry()
   bool newDay = 0 == SD.exists(logFileName);
     
   // open the file
+  // TODO: this could be simpler and just report the condition, and let latching take care of it
   File f = SD.open(logFileName, FILE_WRITE);
   if (!f) {
     statusReportStatus(statusSDAccessError, true);
-    return;    
+    return;
   }
   
   if (newDay) {
@@ -191,7 +193,7 @@ void loggerLogEntry()
       switch(logVariables[i].type) {
         case lvtNumeric:
           f.print(logVariables[i].name);
-          f.print("_sum, ");
+          f.print("_avg, ");
           f.print(logVariables[i].name);
           f.print("_min, ");
           f.print(logVariables[i].name);
@@ -266,23 +268,24 @@ bool statuslogCheckChange(char const *string, bool newValue, bool &currentValue)
 {
   bool changed = false;
   if (newValue != currentValue) {
-    currentValue = newValue;    
+    currentValue = newValue;
     changed = true;
     statusLogPrint(string, newValue);
   }
   return changed;
 }
 
-bool statuslogCheckChange(char const *string, bool newValue, bool &currentValue, uint32_t a, uint32_t b)
+/* bool statuslogCheckChange(char const *string, bool newValue, bool &currentValue, uint32_t a, uint32_t b)
 {
   bool changed = false;
   if (newValue != currentValue) {
-    currentValue = newValue;    
+    currentValue = newValue;
     changed = true;
     statusLogPrint(string, newValue, a, b);
   }
   return changed;
-}
+} */
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // Status log print functions for strings, longs and floats
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -310,6 +313,7 @@ void statusLogPrint(char const *string, bool flag, uint32_t a, uint32_t b)
 
 
 // This one is for logging commands
+// TODO: This really should explicitly say echo or not...
 void statusLogPrint(char const *string)
 {
   const int buflen = 100;
@@ -317,6 +321,7 @@ void statusLogPrint(char const *string)
 
   snprintf(buf, sizeof buf, "%19s %30s", rtcPresentTime(), string);
 
+  // don't echo since this is a command
   statuslogWriteLine(buf, false);
 }
 
@@ -362,6 +367,7 @@ void statuslogWriteLine(char const *string, bool echo)
   snprintf(logFileName, sizeof logFileName, "%04d%02d.log", rtcYear(), rtcMonth());
     
   // open the file
+  // TODO: could rely on latching for condition code
   File f = SD.open(logFileName, FILE_WRITE);
   if (!f) {
     statusReportStatus(statusSDAccessError, true);

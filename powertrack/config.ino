@@ -244,6 +244,7 @@ void loadConfig() {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // fieldValueString - format the field value as a string
 /////////////////////////////////////////////////////////////////////////////////////////////////
+// TODO: get rid of static variable to make it re-entrant (pass in buffer and length)
 char *fieldValueString(int ndx)
 {
   static char buf[20];
@@ -273,6 +274,7 @@ long parseValue(int ndx, const char *str)
       v = atol(str);
       break;
     case FT_TIME:
+      // if conversion fails - because there's something invalid, or just nothing, the values default to zero
       sscanf(str, "%02d:%02d:%02d", &h, &m, &s);
       v = h*3600L+m*60L+s;
       break;
