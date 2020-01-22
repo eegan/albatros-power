@@ -7,7 +7,6 @@
 #include "powertrack.h"
 #include <SD.h>
 
-int sampleCount = 0;
 // TODO: could/should we use runtimer?
 long timeSinceLastLogEntry;
 
@@ -30,7 +29,7 @@ void loggerLoopHandler()
 {
   long now = millis();
   if (now - timeSinceLastLogEntry > cfg_fieldValue(ndx_secsPerLog)*1000) {
-    loggerLogEntry();
+    loggerMakeLogEntry();
     timeSinceLastLogEntry = now;
   }
 }
@@ -115,9 +114,12 @@ struct {
   long sum;         // accumulated sum or bitmap
   long min;         // accumulated min
   long max;         // accumulated max
+  int sampleCount;  // number of samples
 } logVariables[] = 
 
 {
+   // Assuming this (or some Victron element) is element zero, 
+   // for the purpose of printing a representative sampleCount in the log
    {"BatVolt",  FI_V,   lvtNumeric}  
   ,{"PVVolt",   FI_VPV, lvtNumeric}  
   ,{"PVPwr",    FI_PPV, lvtNumeric}
@@ -140,34 +142,37 @@ void loggerNotifyVictronSample()
     // Note: strictly speaking it doesn't make sense to tie the load state sampling to Victron data packets
     // Logically this should be done independently. But practically speaking, if the Victron stops sending
     // data, it probably means something pretty bad.
-    
-    BC(logVariables, i);
-    switch(logVariables[i].type) {
+    loggerLogSample(i, value);
+  }  
+}
+
+void loggerLogSample(uint16_t index, long value)
+{
+    BC(logVariables, index);
+    switch(logVariables[index].type) {
       case lvtNumeric:
-        logVariables[i].sum += value;
-        logVariables[i].min = min(logVariables[i].min, value);
-        logVariables[i].max = max(logVariables[i].max, value);
+        logVariables[index].sum += value;
+        logVariables[index].min = min(logVariables[index].min, value);
+        logVariables[index].max = max(logVariables[index].max, value);
         break;
       case lvtEnumSample:
-        logVariables[i].sum = value;
+        logVariables[index].sum = value;
         break;
       case lvtEnumAccum:
-        logVariables[i].sum |= 1 << value;
+        logVariables[index].sum |= 1 << value;
         break;
     }
-  }
-  sampleCount++;
-  
+    logVariables[index].sampleCount++;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// loggerLogEntry
+// loggerMakeLogEntry
 // Check if the day has changed and if so, format a new filename
 // Open the file and write a line from the log
 // Reset the log variables
 /////////////////////////////////////////////////////////////////////////////////////////////////
 char logFileName[13]; // 8.3 + null
-void loggerLogEntry() 
+void loggerMakeLogEntry() 
 {
   rtcReadTime();
   // Format filename based on day
@@ -211,7 +216,9 @@ void loggerLogEntry()
   // Write out the timestamp and the sample count
   f.print(rtcGetTime());
   f.print(", ");
-  f.print(sampleCount);
+
+  // NOTE: this is using the Victron sample count as representative
+  f.print(logVariables[0].sampleCount);
 
   // Write out the data line
   for (uint16_t i=0; i< COUNT_OF(logVariables); i++) {
@@ -220,7 +227,7 @@ void loggerLogEntry()
     f.print(", ");
     switch(logVariables[i].type) {
       case lvtNumeric:
-        f.print((float)logVariables[i].sum / sampleCount, 2); // 2 decimals, should be enough precision
+        f.print((float)logVariables[i].sum / logVariables[i].sampleCount, 2); // 2 decimals, should be enough precision
         f.print(", ");
         f.print(logVariables[i].min);
         f.print(", ");
@@ -247,8 +254,8 @@ void loggerZeroVariables()
     logVariables[i].sum = 0;
     logVariables[i].min = 0x7FFFFFFF;
     logVariables[i].max = 0x80000000;
+    logVariables[i].sampleCount = 0;
   }
-  sampleCount = 0;
 }
 
 
