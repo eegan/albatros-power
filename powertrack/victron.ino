@@ -24,6 +24,56 @@ void victronInit()
   victronLastSampleTime = millis();
   
   initbuffers();
+  initVictronLogging();
+}
+
+struct {
+  char const *name;       // name for CSV header
+  uint16_t sourceIndex;  // index into parse array
+  logVarType type;  // type
+  uint16_t logIndex;
+
+} victronLogVariables[] =
+
+{
+   // Assuming this (or some Victron element) is element zero,
+   // for the purpose of printing a representative sampleCount in the log
+   {"BatVolt",  FI_V,   lvtNumeric}
+  ,{"PVVolt",   FI_VPV, lvtNumeric}
+  ,{"PVPwr",    FI_PPV, lvtNumeric}
+  ,{"BatCur",   FI_I,   lvtNumeric}
+  ,{"Error",    FI_ERR, lvtEnumSample}
+  ,{"State",    FI_CS,  lvtEnumAccum}
+  ,{"MPPT",     FI_MPPT,  lvtEnumAccum}
+//  ,{"Load",     -1,  lvtEnumAccum}      // hack (special case)
+};
+
+void initVictronLogging()
+{
+  for (uint16_t i = 0; i<COUNT_OF(victronLogVariables); i++)
+  {
+    const char *name = victronLogVariables[i].name;
+    logVarType type = victronLogVariables[i].type;
+    uint16_t sourceIndex = victronLogVariables[i].sourceIndex;
+    victronLogVariables[i].logIndex = loggerRegisterLogVariable(name, type);
+  }
+}
+
+// TODO: port this to Victron, except have our own array that includes Victron index as well as logger index
+// receive notification of a new Victron sample
+void logVictronSample()
+{
+  for (uint16_t i=0; i < COUNT_OF(victronLogVariables); i++) {
+    int logIndex = victronLogVariables[i].logIndex;
+    int sourceIndex = victronLogVariables[i].sourceIndex;
+
+    // get the Victron data field, unless it's the load we are logging
+    long value = victronGetFieldValue(sourceIndex);
+    // Note: strictly speaking it doesn't make sense to tie the load state sampling to Victron data packets
+    // Logically this should be done independently. But practically speaking, if the Victron stops sending
+    // data, it probably means something pretty bad.
+    loggerLogSample(logIndex, value);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -317,7 +367,7 @@ void victronDumpStatus(Stream &p)
 void victronUpdateNotify()
 {
   //TODO: notify other modules
-  loggerNotifyVictronSample();
+  logVictronSample();
   loadctlNotifyVictronSample();
   statusNotifyVictronSample();
 }

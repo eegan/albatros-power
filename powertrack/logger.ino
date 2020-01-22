@@ -7,6 +7,9 @@
 #include "powertrack.h"
 #include <SD.h>
 
+const uint16_t MaxLogVars = 20;
+uint16_t nLogVars = 0;
+
 // TODO: could/should we use runtimer?
 long timeSinceLastLogEntry;
 
@@ -19,6 +22,7 @@ void loggerInit()
   SD.begin(SD_CSpin);
   loggerZeroVariables();
   timeSinceLastLogEntry = millis();
+  nLogVars = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -107,62 +111,49 @@ enum logVarType {
 // ,lvtLoad         // special case: read the load state
 };
 
+
+// Array of structs detailing variables being logged
 struct {
   char const *name;       // name for CSV header
-  int sourceIndex;  // index in Victron data array
   logVarType type;  // type
   long sum;         // accumulated sum or bitmap
   long min;         // accumulated min
   long max;         // accumulated max
   int sampleCount;  // number of samples
-} logVariables[] = 
+} logVariables[MaxLogVars];
 
-{
-   // Assuming this (or some Victron element) is element zero, 
-   // for the purpose of printing a representative sampleCount in the log
-   {"BatVolt",  FI_V,   lvtNumeric}  
-  ,{"PVVolt",   FI_VPV, lvtNumeric}  
-  ,{"PVPwr",    FI_PPV, lvtNumeric}
-  ,{"BatCur",   FI_I,   lvtNumeric}
-  ,{"Error",    FI_ERR, lvtEnumSample}
-  ,{"State",    FI_CS,  lvtEnumAccum}
-  ,{"MPPT",     FI_MPPT,  lvtEnumAccum}
-  ,{"Load",     -1,  lvtEnumAccum}      // hack (special case)
-};
-
-
-// receive notification of a new Victron sample
-void loggerNotifyVictronSample()
-{
-  for (uint16_t i=0; i < COUNT_OF(logVariables); i++) {
-    int ndx = logVariables[i].sourceIndex;
-    
-    // get the Victron data field, unless it's the load we are logging
-    long value = -1 == ndx ? loadctlGetLoadState() : victronGetFieldValue(ndx); 
-    // Note: strictly speaking it doesn't make sense to tie the load state sampling to Victron data packets
-    // Logically this should be done independently. But practically speaking, if the Victron stops sending
-    // data, it probably means something pretty bad.
-    loggerLogSample(i, value);
-  }  
-}
 
 void loggerLogSample(uint16_t index, long value)
 {
     BC(logVariables, index);
-    switch(logVariables[index].type) {
-      case lvtNumeric:
-        logVariables[index].sum += value;
-        logVariables[index].min = min(logVariables[index].min, value);
-        logVariables[index].max = max(logVariables[index].max, value);
-        break;
-      case lvtEnumSample:
-        logVariables[index].sum = value;
-        break;
-      case lvtEnumAccum:
-        logVariables[index].sum |= 1 << value;
-        break;
+    if (index < nLogVars) {
+      switch(logVariables[index].type) {
+        case lvtNumeric:
+          logVariables[index].sum += value;
+          logVariables[index].min = min(logVariables[index].min, value);
+          logVariables[index].max = max(logVariables[index].max, value);
+          break;
+        case lvtEnumSample:
+          logVariables[index].sum = value;
+          break;
+        case lvtEnumAccum:
+          logVariables[index].sum |= 1 << value;
+          break;
+      }
+      logVariables[index].sampleCount++;
     }
-    logVariables[index].sampleCount++;
+}
+
+
+//uint16_t loggerRegisterLogVariable(char *name, enum logVarType type)
+uint16_t loggerRegisterLogVariable(const char *name, uint16_t type)
+{
+  BC(logVariables, nLogVars);
+  if (nLogVars < MaxLogVars) {
+    logVariables[nLogVars].name = name;
+    logVariables[nLogVars].type = (logVarType)type;
+    return nLogVars++;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +184,7 @@ void loggerMakeLogEntry()
     
     f.print("Time, smpCount");
 
-    for (uint16_t i=0; i< COUNT_OF(logVariables); i++) {
+    for (uint16_t i=0; i < nLogVars; i++) {
       f.print(", ");
       switch(logVariables[i].type) {
         case lvtNumeric:
@@ -221,7 +212,7 @@ void loggerMakeLogEntry()
   f.print(logVariables[0].sampleCount);
 
   // Write out the data line
-  for (uint16_t i=0; i< COUNT_OF(logVariables); i++) {
+  for (uint16_t i=0; i < nLogVars; i++) {
 
     // Print the variables
     f.print(", ");
@@ -249,7 +240,7 @@ void loggerMakeLogEntry()
 
 void loggerZeroVariables()
 {
-  for (uint16_t i=0; i<COUNT_OF(logVariables); i++) {
+  for (uint16_t i=0; i<nLogVars; i++) {
     BC(logVariables, i);
     logVariables[i].sum = 0;
     logVariables[i].min = 0x7FFFFFFF;
