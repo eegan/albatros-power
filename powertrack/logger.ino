@@ -3,6 +3,8 @@
 // Regular (time based) logging, and event logging
 /////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: split up log file (averaged etc) stuff from event logging?
+
 // Tested against SD Card library (built-in) version 1.2.2
 #include "powertrack.h"
 #include <SD.h>
@@ -122,7 +124,11 @@ struct {
   int sampleCount;  // number of samples
 } logVariables[MaxLogVars];
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// loggerLogSample
+// Called from client module init routine.
+// Log sample using index returned when registering the variable
+/////////////////////////////////////////////////////////////////////////////////////////////////
 void loggerLogSample(uint16_t index, long value)
 {
     BC(logVariables, index);
@@ -144,7 +150,11 @@ void loggerLogSample(uint16_t index, long value)
     }
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// loggerRegisterLogVariable
+// Called from client module init routine.
+// Register variable name and type; get index to use when logging
+/////////////////////////////////////////////////////////////////////////////////////////////////
 //uint16_t loggerRegisterLogVariable(char *name, enum logVarType type)
 uint16_t loggerRegisterLogVariable(const char *name, uint16_t type)
 {
@@ -208,7 +218,9 @@ void loggerMakeLogEntry()
   f.print(rtcGetTime());
   f.print(", ");
 
-  // NOTE: this is using the Victron sample count as representative
+  // NOTE: this is using entry zero as representative.
+  // This will be part of the Victron data, if Victron init is called before anything 
+  // else that registers a log variable.
   f.print(logVariables[0].sampleCount);
 
   // Write out the data line
