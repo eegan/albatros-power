@@ -19,12 +19,16 @@ long timeSinceLastLogEntry;
 // loggerInit
 // Init (called from main)
 /////////////////////////////////////////////////////////////////////////////////////
-void loggerInit()
+void loggerInit1()
+{
+  nLogVars = 0;
+}
+
+void loggerInit2()
 {
   SD.begin(SD_CSpin);
   loggerZeroVariables();
   timeSinceLastLogEntry = millis();
-  nLogVars = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -106,12 +110,15 @@ void loggerEraseFile (Stream &p, const char *filename)
   SD.remove(filename);
 }
 
-enum logVarType {
-  lvtNumeric      // numeric value, will accumulate averaged/min/max
- ,lvtEnumSample   // enum value, will sample current value
- ,lvtEnumAccum    // enum value, will accumulate bitmap of values seen in log entry interval
-// ,lvtLoad         // special case: read the load state
-};
+// Arduino is broken
+// This enum declaration works (into a global scope) if it is elsewhere but not if it is here
+// It is in powertrack.h
+// Please maintain them in both places, until we figure out what to do.
+// enum logVarType {
+  // lvtNumeric      // numeric value, will accumulate averaged/min/max
+ // ,lvtEnumSample   // enum value, will sample current value
+ // ,lvtEnumAccum    // enum value, will accumulate bitmap of values seen in log entry interval
+// };
 
 
 // Array of structs detailing variables being logged
@@ -127,26 +134,26 @@ struct {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // loggerLogSample
 // Called from client module init routine.
-// Log sample using index returned when registering the variable
+// Log sample using handle returned when registering the variable
 /////////////////////////////////////////////////////////////////////////////////////////////////
-void loggerLogSample(uint16_t index, long value)
+void loggerLogSample(uint16_t handle, long value)
 {
-    BC(logVariables, index);
-    if (index < nLogVars) {
-      switch(logVariables[index].type) {
+    BC(logVariables, handle);
+    if (handle < nLogVars) {
+      switch(logVariables[handle].type) {
         case lvtNumeric:
-          logVariables[index].sum += value;
-          logVariables[index].min = min(logVariables[index].min, value);
-          logVariables[index].max = max(logVariables[index].max, value);
+          logVariables[handle].sum += value;
+          logVariables[handle].min = min(logVariables[handle].min, value);
+          logVariables[handle].max = max(logVariables[handle].max, value);
           break;
         case lvtEnumSample:
-          logVariables[index].sum = value;
+          logVariables[handle].sum = value;
           break;
         case lvtEnumAccum:
-          logVariables[index].sum |= 1 << value;
+          logVariables[handle].sum |= 1 << value;
           break;
       }
-      logVariables[index].sampleCount++;
+      logVariables[handle].sampleCount++;
     }
 }
 

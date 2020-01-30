@@ -7,6 +7,7 @@
 
 long timeOfDay;
 runTimer loadRunTimer(1* 1000L);  // run interval
+uint16_t hLoadLogVar;             // handle for load state logging variable
 
 /////////////////////////////////////////////////////////////////////////////////////
 // loadctlInit
@@ -17,6 +18,7 @@ void loadctlInit()
   // Set load control pin to output state
   // Hi = on, Lo = off
   pinMode(loadPin, OUTPUT);
+  hLoadLogVar = loggerRegisterLogVariable("Load", lvtEnumAccum);
 }
 
 // Conditions that go into determining load status (plus load status)
@@ -121,12 +123,14 @@ void loadctlLoopHandler()
     statuslogCheckChange("load ON", newLoadOn, loadOn);
     
     digitalWrite(loadPin, loadOn);
-    statusNotifyLoad(loadOn);    
+    statusNotifyLoad(loadOn);
+    loggerLogSample(hLoadLogVar, loadOn);
 
   }
 }
 
-
+// Hear from victron module that it has logged a sample,
+// so we can make use of this data for voltage prediction
 void  loadctlNotifyVictronSample()
 {
   // handle measurement, if active

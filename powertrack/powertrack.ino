@@ -23,8 +23,9 @@ HardwareSerial &monitorPort = Serial1;
 
 void setup()
 {
+  loggerInit1();
   debugInit();
-  monitorInit();  // do this first so we can print status messages  
+  monitorInit1();  // do this first so we can print status messages  
   rtcInit();      // do this next so we know what time it is before we depend on this
   cfgInit();
 
@@ -34,7 +35,7 @@ void setup()
   
   victronInit();
   // commented out since it re-inits the serial port also used for monitor; TODO implement a flag here
-  loggerInit();
+  loggerInit2();
   monitorInit2(); // after RTC and logger init
   loadctlInit();
   statusInit();

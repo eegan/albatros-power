@@ -45,7 +45,7 @@ const char helpstring[] PROGMEM =
 // monitorInit
 // Init (early, called from main)
 /////////////////////////////////////////////////////////////////////////////////////
-void monitorInit() {
+void monitorInit1() {
   monitorPort.begin(9600);
   monitorPort.setTimeout(10000); // 5 seconds
 }
