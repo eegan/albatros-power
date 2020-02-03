@@ -13,8 +13,11 @@ byte ex_reply[] = {0x01, 0x03, 0x02, 0x00, 0x17, 0xF8, 0x4A}; // wind speed 2.3 
 byte reply[reply_len];
 const int query_len = sizeof query;
 
+uint16_t hAnemomLogVar;
+
 void anemometerInit() {
   Serial3.begin(9600);
+  hAnemomLogVar = loggerRegisterLogVariable("Wind Speed [dm/s]", lvtNumeric);
   anemometerState = tx;
 }
 
@@ -35,6 +38,7 @@ void anemometerLoopHandler() {
       if (Serial3.available() >= query_len + reply_len) {
         Serial3.readBytes(reply, query_len + reply_len);
         wind_speed = parseWindSpeed(reply);
+        loggerLogSample(hAnemomLogVar, wind_speed);
         anemometerState = tx;
       }
       break;
