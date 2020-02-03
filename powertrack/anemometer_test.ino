@@ -1,7 +1,7 @@
 int wind_speed;
-unsigned long timer;
-unsigned long last_time = 0;
-long period = 5000; // ms. anything lower than around 5000 (the response time of anemometer) just creates repeated results.
+unsigned long anemom_timer;
+unsigned long anemom_last_time = 0;
+long anemom_period = 5000; // ms. anything lower than around 5000 (the response time of anemometer) just creates repeated results.
 
 enum anemometerStates{tx, rx};
 enum anemometerStates anemometerState;
@@ -24,12 +24,12 @@ void anemometerInit() {
 void anemometerLoopHandler() {
   switch (anemometerState) {
     case tx:
-      timer = millis();
-      if (timer - last_time > period) {
+      anemomtimer = millis();
+      if (anemom_timer - anemom_last_time > anemom_period) {
         clearBuffer();
         Serial3.write(query, query_len);
         //Serial3.write(ex_reply, reply_len); // for testing
-        last_time = timer;
+        anemom_last_time = anemom_timer;
         
         anemometerState = rx;
       }
