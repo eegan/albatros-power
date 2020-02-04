@@ -2,7 +2,7 @@ int dividerPin = A0;
 const int dividerVMAX = 31100; // in mV. voltage across input of divider needed to get analogRef volts across output
 const int divider_yint = -200; // in mV. Empirically determined y int of (Vreal, Vmeas) linear fit.
 int voltage;                   
-int reading;
+int divider_reading;
 
 unsigned long divider_timer;
 long divider_last_time = 0;
@@ -26,6 +26,6 @@ void dividerLoopHandler() {
 
 int dividerGetVoltage() {
   // returns voltage in mV
-  reading = analogRead(dividerPin);
-  return (reading / 1024.) * (dividerVMAX) - divider_yint;
+  divider_reading = analogRead(dividerPin);
+  return (divider_reading / 1024.) * (dividerVMAX) - divider_yint;
 }
