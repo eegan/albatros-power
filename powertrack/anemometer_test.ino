@@ -24,7 +24,7 @@ void anemometerInit() {
 void anemometerLoopHandler() {
   switch (anemometerState) {
     case tx:
-      anemomtimer = millis();
+      anemom_timer = millis();
       if (anemom_timer - anemom_last_time > anemom_period) {
         clearBuffer();
         Serial3.write(query, query_len);
