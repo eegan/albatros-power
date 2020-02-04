@@ -35,6 +35,7 @@ void setup()
   
   victronInit();
   anemometerInit();
+  dividerInit();
   // commented out since it re-inits the serial port also used for monitor; TODO implement a flag here
   loggerInit2();
   monitorInit2(); // after RTC and logger init
@@ -50,6 +51,7 @@ void loop()
   
   victronLoopHandler();
   anemometerLoopHandler();
+  dividerLoopHandler();
   monitorLoopHandler();
   loadctlLoopHandler();
   loggerLoopHandler();
