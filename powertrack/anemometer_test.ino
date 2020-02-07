@@ -41,7 +41,6 @@ void anemometerLoopHandler() {
         Serial3.readBytes(reply, query_len + reply_len);
         wind_speed = parseWindSpeed(reply);
         loggerLogSample(hAnemomLogVar, wind_speed);
-        monitorPort.println(wind_speed);
         anemometerState = tx;
       } else if (anemom_timer - anemom_last_time > anemom_timeout) {
         anemometerState = tx;
