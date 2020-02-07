@@ -1,7 +1,8 @@
 int wind_speed;
 unsigned long anemom_timer;
 unsigned long anemom_last_time = 0;
-long anemom_period = 1000; // ms. anything lower than around 5000 (the response time of anemometer) just creates repeated results.
+long anemom_period = 5000; // ms. anything lower than around 5000 (the response time of anemometer) just creates repeated results.
+long anemom_timeout = 10000; //ms of silence from anemometer before another query sent
 
 enum anemometerStates{tx, rx};
 enum anemometerStates anemometerState;
@@ -28,7 +29,6 @@ void anemometerLoopHandler() {
       if (anemom_timer - anemom_last_time > anemom_period) {
         anemomClearBuffer();
         Serial3.write(query, query_len);
-        //monitorPort.println("sent to anemom.");
         //Serial3.write(ex_reply, reply_len); // for testing
         anemom_last_time = anemom_timer;
         
@@ -36,13 +36,14 @@ void anemometerLoopHandler() {
       }
       break;
     case rx:
-      //monitorPort.println(Serial3.available());
       anemom_timer = millis();
       if (Serial3.available() >= query_len + reply_len) {
         Serial3.readBytes(reply, query_len + reply_len);
         wind_speed = parseWindSpeed(reply);
         loggerLogSample(hAnemomLogVar, wind_speed);
         monitorPort.println(wind_speed);
+        anemometerState = tx;
+      } else if (anemom_timer - anemom_last_time > anemom_timeout) {
         anemometerState = tx;
       }
       break;
