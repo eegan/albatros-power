@@ -6,12 +6,12 @@ long anemom_period = 1000; // ms. anything lower than around 5000 (the response 
 enum anemometerStates{tx, rx};
 enum anemometerStates anemometerState;
 
-const int reply_len = 7; // if query_len is 8 given it has 9 entries...
 byte binary [] = {0x00, 0x09, 0x0F};
 byte query[] = {0x01, 0x03, 0x00, 0x16, 0x00, 0x01, 0x65, 0xCE};
-byte ex_reply[] = {0x01, 0x03, 0x02, 0x00, 0x17, 0xF8, 0x4A}; // wind speed 2.3 m/s
-byte reply[reply_len];
 const int query_len = sizeof query;
+byte ex_reply[] = {0x01, 0x03, 0x02, 0x00, 0x17, 0xF8, 0x4A}; // wind speed 2.3 m/s
+const int reply_len = sizeof ex_reply;
+byte reply[query_len + reply_len]; // have to catch the loopback too
 
 uint16_t hAnemomLogVar;
 
@@ -29,7 +29,7 @@ void anemometerLoopHandler() {
         anemomClearBuffer();
         Serial3.write(query, query_len);
         //monitorPort.println("sent to anemom.");
-        Serial3.write(ex_reply, reply_len); // for testing
+        //Serial3.write(ex_reply, reply_len); // for testing
         anemom_last_time = anemom_timer;
         
         anemometerState = rx;
@@ -42,6 +42,7 @@ void anemometerLoopHandler() {
         Serial3.readBytes(reply, query_len + reply_len);
         wind_speed = parseWindSpeed(reply);
         loggerLogSample(hAnemomLogVar, wind_speed);
+        monitorPort.println(wind_speed);
         anemometerState = tx;
       }
       break;
