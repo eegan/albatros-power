@@ -19,7 +19,8 @@ const long mainLoopSleepTimeMs = 100;    // time to sleep
 long lastLoopBegin;
 #endif
 
-HardwareSerial &monitorPort = Serial1;
+//HardwareSerial &monitorPort = Serial1;
+HardwareSerial &monitorPort = Serial;
 
 void setup()
 {
@@ -33,7 +34,7 @@ void setup()
   lastLoopBegin = millis();
   #endif
   
-  victronInit();
+  //victronInit();
   anemometerInit();
   dividerInit();
   shuntInit();
@@ -50,7 +51,7 @@ void loop()
   paceLoop();
   #endif
   
-  victronLoopHandler();
+  //victronLoopHandler();
   anemometerLoopHandler();
   dividerLoopHandler();
   shuntLoopHandler();
