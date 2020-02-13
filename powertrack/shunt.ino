@@ -25,7 +25,7 @@ void shuntLoopHandler() {
 }
 
 int shuntGetCurrent() {
-  // returns current in amps
+  // returns current in mA
   shunt_reading = analogRead(shuntPin);
-  return (shunt_reading / 1024.) * (shuntVREF / shuntResistance);
+  return (shunt_reading / 1024.) * (shuntVREF / shuntResistance) * 1000;
 }
