@@ -11,10 +11,10 @@ class anemometer {
 	enum anemometerStates anemometerState;
 
     // TODO: clean up length hard-coding if possible
-	static byte binary [3];
-	static byte query[8];
+	//static byte binary [3];
+	static const byte query[8];
 	const int query_len = 8; // sizeof query;
-	static byte ex_reply[7];
+	static const byte ex_reply[7];
 	const int reply_len = 7; //sizeof ex_reply;
 	byte reply[8+7];
 	//byte reply[query_len + reply_len]; // have to catch the loopback too
