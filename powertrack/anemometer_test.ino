@@ -1,7 +1,7 @@
 #include "anemometer.h"
 
 static uint16_t hAnemom1LogVar;
-//static uint16_t hAnemom2LogVar;
+static uint16_t hAnemom2LogVar;
 
 anemometer an1 = anemometer(Serial3);
 anemometer an2 = anemometer(Serial2);
