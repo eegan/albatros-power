@@ -1,8 +1,12 @@
 int dividerPin = A0;
+int dividershuntPin = A1; // TODO make it so this just gets the val. from shuntPin
+float dividershuntVREF = 1100; // TODO make it so this just gets the val. from shuntPin
 const int dividerVMAX = 31100; // in mV. voltage across input of divider needed to get analogRef volts across output
-const int divider_yint = -200; // in mV. Empirically determined y int of (Vreal, Vmeas) linear fit.
+//const int divider_yint = -200; // in mV. Empirically determined y int of (Vreal, Vmeas) linear fit.
+const int divider_yint = 0;
 int voltage;                   
 int divider_reading;
+float shunt_voltage;
 
 unsigned long divider_timer;
 long divider_last_time = 0;
@@ -27,5 +31,6 @@ void dividerLoopHandler() {
 int dividerGetVoltage() {
   // returns voltage in mV
   divider_reading = analogRead(dividerPin);
-  return (divider_reading / 1024.) * (dividerVMAX) - divider_yint;
+  shunt_voltage = (analogRead(dividershuntPin) / 1024.) * (dividershuntVREF);
+  return (divider_reading / 1024.) * (dividerVMAX) - shunt_voltage - divider_yint;
 }
