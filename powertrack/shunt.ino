@@ -1,8 +1,7 @@
 int shuntPin = A1;
-const int shuntResistance = 25; // in mOhm
-const int shuntVREF = 1100; // in mV
+const float shuntResistance = 25; // in mOhm
+const float shuntVREF = 1100; // in mV
 int current;
-int shunt_reading;
 
 unsigned long shunt_timer;
 long shunt_last_time = 0;
@@ -26,6 +25,6 @@ void shuntLoopHandler() {
 
 int shuntGetCurrent() {
   // returns current in mA
-  shunt_reading = analogRead(shuntPin);
+  int shunt_reading = analogRead(shuntPin);
   return (shunt_reading / 1024.) * (shuntVREF / shuntResistance) * 1000;
 }
