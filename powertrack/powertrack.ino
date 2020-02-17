@@ -90,7 +90,7 @@ void paceLoop()
 void assertfail(char const *file, long line)
 {
   char message[70];
-  snprintf(message, sizeof message, "Assert fail line %d", line);
+  snprintf(message, sizeof message, "Assert fail line %ld", line);
   statusLogPrint(message);
   statusLogPrint(file);
   monitorPort.println("Assert fail!");
@@ -100,7 +100,7 @@ void bc(uint16_t count, int32_t index, char const *file, long line)
 {
   char message[70];
   if (index >= 0 && index < count) return;
-  snprintf(message, sizeof message, "Array index=%ld out of bounds on line %d", index, line);
+  snprintf(message, sizeof message, "Array index=%ld out of bounds on line %ld", index, line);
   statusLogPrint(message);
   statusLogPrint(file);
   monitorPort.println(message);
