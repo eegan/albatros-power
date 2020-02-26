@@ -4,7 +4,7 @@ class anemometer {
 	int wind_speed;
 	unsigned long anemom_timer;
 	unsigned long anemom_last_time = 0;
-	long anemom_period = 5000; // ms. anything lower than around 5000 (the response time of anemometer) just creates repeated results.
+	long anemom_period = 2000; // ms. anything lower than around 5000 (the response time of anemometer) just creates repeated results.
 	long anemom_timeout = 10000; //ms of silence from anemometer before another query sent
 
 	enum anemometerStates{tx, rx};
