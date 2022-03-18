@@ -24,11 +24,28 @@
 
 
 // Hardware definitions
+
+#define ORIGINAL_CONFIG 0   // 0 = as built on power controller shield (2020-2022)
+                            // 1 = as built on generic data logger board in 2019
+
+#if ORIGINAL_CONFIG
+
 #define loadPin 5     // On/off control for load switch
 #define greenLEDPin 6 // pretend an LED is the load switch
 #define redLEDPin 7   // pretend an LED is the load switch
 
 #define SD_CSpin 10   // Chip-select pin for SD
+
+#else
+
+#define loadPin 4     // On/off control for load switch
+#define greenLEDPin 5 // pretend an LED is the load switch
+#define redLEDPin 6   // pretend an LED is the load switch
+
+#define SD_CSpin 53   // Chip-select pin for SD
+
+#endif
+
 
 #define DAY_SECONDS 86400
 

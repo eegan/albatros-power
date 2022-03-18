@@ -19,7 +19,7 @@ const long mainLoopSleepTimeMs = 100;    // time to sleep
 long lastLoopBegin;
 #endif
 
-HardwareSerial &monitorPort = Serial1;
+HardwareSerial &monitorPort = Serial;
 
 void setup()
 {
