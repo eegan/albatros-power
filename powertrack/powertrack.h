@@ -39,8 +39,8 @@
 #else
 
 #define loadPin 4     // On/off control for load switch
-#define greenLEDPin 5 // pretend an LED is the load switch
-#define redLEDPin 6   // pretend an LED is the load switch
+#define greenLEDPin 3 // pretend an LED is the load switch
+#define redLEDPin   2 // pretend an LED is the load switch
 
 #define SD_CSpin 53   // Chip-select pin for SD
 
