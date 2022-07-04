@@ -1,4 +1,8 @@
 # albatros-power
+
+NOTE: the active repository is now https://github.com/ALBATROS-Experiment/albatros_power
+
+
 (Arduino) power logging and sleep control for ALBATROS
 
 This project can embed its current git commit hash in the code
